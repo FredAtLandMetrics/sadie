@@ -56,7 +56,7 @@
     </tr>
     <tr class="top-aligned-row">
       <td><strong>Last Update:</strong></td>
-      <td>Thu Jan 19 11:51:08 -0500 2012</td>
+      <td>Thu Jan 19 17:30:48 -0500 2012</td>
     </tr>
     </table>
   </div>
@@ -68,6 +68,47 @@
 
   <div id="contextContent">
 
+    <div id="description">
+      <h2>About</h2>
+<p>
+<a href="../classes/Sadie.html">Sadie</a> is a data framework intended to
+ease the pain of constructing, accessing, and managing the resources
+required by large stores of inter-related data. It supports sessions, lazy
+on-demand, one-time evaluation and file-based storage/retrieval operations
+for resource-heavy data.
+</p>
+<p>
+It can be downloaded via its rubygems page
+</p>
+<pre>
+  https://rubygems.org/gems/sadie
+</pre>
+<p>
+or from github:
+</p>
+<pre>
+  https://github.com/FredAtLandMetrics/sadie
+</pre>
+<h2>Summary</h2>
+<p>
+<a href="../classes/Sadie.html">Sadie</a> exists to de-couple the
+assembling of large, related datasets from the rest of an application so
+that intelligent, manual optimizations become more apparent. A common usage
+would be to query an entire table, then, as the single query is iterated
+on, perform multiple, simultaneous calculations on the dataset where, in
+other situations, the calculations might have required multiple similar
+queries to the database.
+</p>
+<p>
+In LandMetrics&#8217; perimetercomps ( <a
+href="http://perimetercomps.com">perimetercomps.com</a> ), a similar
+framework was developed such that, given just a few initial parameters, all
+of the information for the 50+ page report was assembled with only 12
+queries and a myriad of graphs, charts and tables are constructed from the
+single optimized data storage mechanism.
+</p>
+
+    </div>
 
 
    </div>
