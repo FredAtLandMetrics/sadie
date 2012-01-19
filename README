@@ -1,0 +1,17 @@
+==About
+
+Sadie is a data framework intended to ease the pain of constructing, accessing, and managing the resources required by large stores of inter-related data. It supports sessions, lazy on-demand, one-time evaluation and file-based storage/retrieval operations for resource-heavy data.
+
+It can be downloaded via its rubygems page
+
+  https://rubygems.org/gems/sadie
+
+or from github:
+
+  https://github.com/FredAtLandMetrics/sadie
+  
+==Summary
+
+Sadie exists to de-couple the assembling of large, related datasets from the rest of an application so that intelligent, manual optimizations become more apparent.  A common usage would be to query an entire table, then, as the single query is iterated on, perform multiple, simultaneous calculations on the dataset where, in other situations, the calculations might have required multiple similar queries to the database.
+
+In LandMetrics' perimetercomps ( http://perimetercomps.com ), a similar framework was developed such that, given just a few initial parameters, all of the information for the 50+ page report was assembled with only 12 queries and a myriad of graphs, charts and tables are constructed from the single optimized data storage mechanism.
