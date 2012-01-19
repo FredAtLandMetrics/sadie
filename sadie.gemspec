@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.version     = Sadie::VERSION
   s.authors     = ["Fred McDavid"]
   s.email       = ["fred@landmetrics.com"]
-  s.homepage    = "http://www.landmetrics.com"
+  s.homepage    = "http://www.landmetrics.com/Sadie"
   s.summary     = %q{A gem that provides sadie, a data access framework}
-  s.description = %q{Sadie is a data framework intended to ease the pain of constructing, accessing, and managing the resources required by large stores of inter-related data. It supports sessions, lazy on-demand, one-time evaluation and file-based storage/retrieval operations for resource-heavy data.}
+  s.description = %q{Sadie is a data framework intended to ease the pain of managing related data.}
 
   s.rubyforge_project = "sadie"
 

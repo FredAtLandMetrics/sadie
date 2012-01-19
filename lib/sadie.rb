@@ -6,7 +6,7 @@ Bundler.require(:default)
 #require 'ini'
 
 
-# ==Description
+# ==Description: Sadie
 # Sadie is a data framework intended to ease the pain of constructing, accessing, and 
 # managing the resources required by large stores of inter-related data. It supports
 # sessions, lazy on-demand, one-time evaluation and file-based storage/retrieval
@@ -19,15 +19,19 @@ Bundler.require(:default)
 
 class Sadie
     
-    # init sadie instance:
+    
+    # ==method: constructor
     #   options can include any kay, value pairs but the following key values bear mention:
     #     REQUIRED
+    #
     #       sadie.sessions_dirpath
     #           or
     #         sadie.session_id
     #           or
     #         sadie.session_filepath  <- this is probably a bad call, use with caution
     #     
+    #       and
+    #
     #       sadie.primers_dirpath
     def initialize( options )
         
@@ -73,10 +77,21 @@ class Sadie
         
     end
     
+    # ==method: Sadie::getSadieInstance
+    #
+    # returns a new Sadie instance.  Options match those of Sadie's constructor method
     def self.getSadieInstance( options )
         Sadie.new(options)
     end
 
+    # ==method: Sadie::Prime
+    #
+    # called my the .res files to register the keys the .res will prime for
+    # 
+    # accepts as an argument a hash and a block.  The hash must include the key:
+    # 'provides' and it must define an array
+    # of keys that the calling resource (.res) file will have provided after the block is
+    # evaluated
     def self.Prime ( primer_definition )
         
         # validate params
@@ -103,7 +118,11 @@ class Sadie
             end
         end
     end
-           
+    
+    # ==method: get
+    #
+    # a standard getter which primes the unprimed and recalls "expensive" facts from files
+    # completely behind-the-scenes as directed by the resource (.res) files
     def get( k )
         
         # prime if not yet primed
@@ -118,6 +137,10 @@ class Sadie
         return _recallExpensive( k )
     end
     
+    # ==method: setCheap
+    #
+    # the expensive setter.  key, value pairs stored via this method are not kept in memory
+    # but are stored to file and recalled as needed
     def setExpensive(k,v)
         expensive_filepath              = _computeExpensiveFilepath( k )
         serialized_value                = Marshal::dump( v )
@@ -128,11 +151,15 @@ class Sadie
         _primed( k, true )
     end
     
+    # ==method: set
     # alias for setCheap(k,v)
     def set( k, v )
         setCheap( k, v )
     end
     
+    # ==method: setCheap
+    #
+    # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap(k,v)
         
         # set it, mark not expensive and primed
@@ -149,6 +176,9 @@ class Sadie
         
     end
     
+    # ==method: save
+    #
+    # serialize to session file
     def save
         session_filepath = File.expand_path( "session."+value, get( "sadie.sessions_dirpath" ) )
         serialized_value                = Marshal::dump( [ @shortterm, @flag_primed, @flag_expensive ] )
@@ -157,7 +187,10 @@ class Sadie
         }        
     end
     
-    # return to saved state
+    # ==method: revert!
+    #
+    # return to last saved state
+    #
     def revert!
         
         @shortterm = {
@@ -168,6 +201,12 @@ class Sadie
         _initializeWithSessionId( get( "sadie.session_id" ) )
     end
     
+    private
+    
+    
+    # ==method: primed?
+    #
+    # 
     def primed?( k )
         @flag_primed[:"#{k}"] \
             and return true
@@ -179,9 +218,6 @@ class Sadie
             and return true
         return false
     end
-    
-    private
-    
     
     
     def _prime ( k )
