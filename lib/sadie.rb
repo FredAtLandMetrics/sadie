@@ -212,23 +212,29 @@ class Sadie
         _initializeWithSessionId( get( "sadie.session_id" ) )
     end
     
-    private
-    
-    
     # ==method: primed?
     #
-    # 
+    #   INTERNAL: this method should only be called the the class method, Prime
+    #
     def primed?( k )
         @flag_primed[:"#{k}"] \
             and return true
         return false
     end
     
+    # ==method: primed?
+    #
+    #   INTERNAL: this method should only be called the the class method, Prime
+    #
     def expensive?( k )
         @flag_expensive[:"#{k}"] \
             and return true
         return false
     end
+    
+    
+    
+    private
     
     
     def _prime ( k )
