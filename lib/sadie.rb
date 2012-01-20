@@ -105,14 +105,25 @@ class Sadie
         # if initializing primers, just remember how to get back to the primer later,
         # otherwise, prime
         if Sadie::_midPrimerInit?
+            
+            # mid primer init, just memorize primer location
             Sadie::_memorizePrimerLocation( @@mid_primer_filepath,  primer_definition["provides"] )
         else
+            
+            # run code block with the current sadie instance
             current_sadie_instance = Sadie::_getCurrentSadieInstance
-            current_primer_filepath = Sadie::_getCurrentPrimerFilepath
             yield( current_sadie_instance )
+            
+            # loop thru all primer provides, ensuring each primed
+            current_primer_filepath = Sadie::_getCurrentPrimerFilepath
             primer_definition["provides"].each do | key |
+                
+                # skip blank lines
                 next if key.match /^\s*$/
+                
                 #puts "Prime> providing: #{key}"
+                
+                # key primed or raise error
                 current_sadie_instance.primed? key \
                     or raise "primer definition file: #{current_primer_filepath} was supposed to define #{key}, but did not"
             end
