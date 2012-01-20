@@ -16,6 +16,15 @@ class TestSadieToplevel < Test::Unit::TestCase
             
             # test top-level res
             assert_equal( sadie.get( "toplevel_single.oneprime" ), "primedit" )
+            
+            # test destruct on get
+            dog1a = sadie.get( "toplevel_destructonget.oneprime" )
+            dog2a = sadie.get( "toplevel_destructonget.twoprime" )
+            dog2b = sadie.get( "toplevel_destructonget.twoprime" )
+            sleep( 2 )
+            dog1b = sadie.get( "toplevel_destructonget.oneprime" )
+            assert_equal( dog2a, dog2b )
+            assert_not_equal( dog1a, dog1b )
         end
     end
 end

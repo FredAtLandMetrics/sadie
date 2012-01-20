@@ -39,6 +39,7 @@ class Sadie
         @shortterm                      = Hash.new
         @flag_expensive                 = Hash.new
         @flag_primed                    = Hash.new
+        @flag_eachtimeprime             = Hash.new
 
         # init class
         Sadie::_checkSanity
@@ -136,17 +137,43 @@ class Sadie
     # completely behind-the-scenes as directed by the resource (.res) files
     def get( k )
         
+        # if it's already set, return known answer
+        if _isset?( k )
+            
+            # _get the return value
+            return_value = _get( k )
+            
+            # unset and unprime if destructOnGet?
+            if destructOnGet?( k )
+#                 puts "destructing #{k}"
+                unset( k )
+                unprime( k )
+            end
+            
+            return return_value
+        end
+        
         # prime if not yet primed
         primed?( k ) \
             or _prime( k )
             
         # if not expensive, then return what's already known
         expensive?( k ) \
-            or return _get( k )
+            and return _recallExpensive( k )
             
-        # expensive, so recall from file
-        return _recallExpensive( k )
+        # _get the return value
+        return_value = _get( k )
+        
+        # unset and unprime if destructOnGet?
+        if destructOnGet?( k )
+#                 puts "destructing #{k}"
+            unset( k )
+            unprime( k )
+        end
+        
+        return return_value
     end
+    
     
     # ==method: setCheap
     #
@@ -162,6 +189,58 @@ class Sadie
         _primed( k, true )
     end
     
+    # ==method: setDestructOnGet
+    #
+    #    key value will go away and key will be unprimed and unset after next get
+    #
+    #    NOTE: this doesn't make sense with keys that were set via setExpensive
+    #          so it can be set, but nothing's going to happen differently
+    def setDestructOnGet( key, turnon=true )
+#         puts "setDestructOnGet( #{key}, #{turnon} )"
+        if ( turnon )
+#             puts "turning on destructOnGet for key: #{key}"
+            @flag_eachtimeprime["#{key}"] = true
+            return true
+        end
+        @flag_eachtimeprime.has_key?( key ) \
+            and @flag_eachtimeprime.delete( key )
+    end
+    
+    # ==method: destructOnGet?
+    #
+    # returns true if the destructOnGet flag is set for the key
+    def destructOnGet?( key )
+#         print "destructOnGet?> key #{key} "
+        @flag_eachtimeprime.has_key?( key ) \
+            or return _newline( false )
+#         print " defined-in-eachtimeprime "
+        @flag_eachtimeprime["#{key}"] \
+            and return _newline( true )
+#         print " defined-but-false "
+        return _newline(false)
+    end
+    
+    def _newline( rval=true )
+        #puts
+        return rval
+    end
+    
+    # ==method: unset
+    # unsets the value of k.  Note that this does not unprime, so
+    # get(key) will simply return nil. Run with unprime to have the
+    # primer run again
+    def unset( key )
+        _unset( key )
+    end
+    
+    # ==method: unprime
+    # unprimes k.  Note that this does not unset the value, so
+    # get(key) will continue to return whatever it otherwise would have.
+    # run unset as well to have the primer run again.
+    def unprime( key )
+        _primed( key, false )
+    end
+    
     # ==method: set
     # alias for setCheap(k,v)
     def set( k, v )
@@ -171,7 +250,7 @@ class Sadie
     # ==method: setCheap
     #
     # the cheap setter.  key, value pairs stored via this method are kept in memory
-    def setCheap(k,v)
+    def setCheap( k, v )
         
         # set it, mark not expensive and primed
         _set( k, v )
@@ -217,7 +296,9 @@ class Sadie
     #   INTERNAL: this method should only be called the the class method, Prime
     #
     def primed?( k )
-        @flag_primed[:"#{k}"] \
+        @flag_primed.has_key?( k ) \
+            or return false
+        @flag_primed["#{k}"] \
             and return true
         return false
     end
@@ -227,7 +308,8 @@ class Sadie
     #   INTERNAL: this method should only be called the the class method, Prime
     #
     def expensive?( k )
-        @flag_expensive[:"#{k}"] \
+        @flag_expensive.has_key?( k ) or return false;
+        @flag_expensive["#{k}"] \
             and return true
         return false
     end
@@ -238,12 +320,22 @@ class Sadie
     
     
     def _prime ( k )
+#         puts "_prime( #{k} )"
+        # fetch primers dirpath and validate the primer hash
         primer_dirpath = _get("sadie.primers_dirpath")
-        if primer_filepath = @@primer_hash["#{primer_dirpath}"]["#{k}"]
+        @@primer_hash.has_key?(primer_dirpath) \
+            or @@primer_hash[primer_dirpath] = Hash.new
+        
+        primers = @@primer_hash[primer_dirpath]
+        primers.has_key?( k ) or return true
+                
+        if primer_filepath = primers[k]
+#             puts "loading filepath: #{primer_filepath}"
             Sadie::_setCurrentPrimerFilepath(primer_filepath)
             Sadie::_setCurrentSadieInstance( self )
             load primer_filepath
         end
+        return true
         
     end
     
@@ -344,7 +436,7 @@ class Sadie
     
     def _primed( k, isprimed )
         if isprimed
-            @flag_primed[:"#{k}"]       = true
+            @flag_primed["#{k}"]       = true
             return
         end
         @flag_primed.delete( k )
@@ -352,7 +444,7 @@ class Sadie
     
     def _expensive( k, isexpensive )
         if isexpensive
-            @flag_expensive[:"#{k}"]    = true
+            @flag_expensive["#{k}"]    = true
             return
         end
         @flag_expensive.delete( k )
@@ -360,7 +452,7 @@ class Sadie
     
     # direct access getter for shortterm memory
     def _get( key )
-        value = @shortterm[:"#{key}"]
+        value = @shortterm["#{key}"]
         #puts "_get(#{key})> #{value}"
         return value
     end
@@ -369,7 +461,16 @@ class Sadie
     def _set( key, value )
         
 #        puts "_set> key: #{key}, value: #{value}"
-        @shortterm[:"#{key}"]           = value
+        @shortterm["#{key}"]           = value
+    end
+    
+    def _unset( key )
+        @shortterm.has_key?( key ) \
+            and @shortterm.delete( key )
+    end
+    
+    def _isset?( key )
+        return @shortterm.has_key?( key )
     end
     
     # init given path to session file
@@ -429,7 +530,7 @@ class Sadie
     
     def self._memorizePrimerLocation( filepath, primer_provides )
         primer_dirpath = @@mid_primer_toplevel_primer_dirpath
-        @@primer_hash.has_key?(primer_dirpath) \
+        @@primer_hash.has_key?( primer_dirpath ) \
             or @@primer_hash["#{primer_dirpath}"] = Hash.new
         primer_provides.each do | key |
             Sadie::_setPrimerProvider( key, filepath )
