@@ -16,7 +16,7 @@ Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
     sadie.get( db_key ) do | dbh |
         
         # run the query
-        dbh.select_all( query, block )        
+        dbh.select_all( query, block )
         
     end
     raise 'Sadie returned nil for key: #{db_key}'
