@@ -103,14 +103,21 @@ the sadie constructor
 
       <div class="name-list">
       <a href="#M000003">Prime</a>&nbsp;&nbsp;
+      <a href="#M000008">_newline</a>&nbsp;&nbsp;
+      <a href="#M000007">destructOnGet?</a>&nbsp;&nbsp;
+      <a href="#M000016">expensive?</a>&nbsp;&nbsp;
       <a href="#M000004">get</a>&nbsp;&nbsp;
       <a href="#M000002">getSadieInstance</a>&nbsp;&nbsp;
       <a href="#M000001">new</a>&nbsp;&nbsp;
-      <a href="#M000009">revert!</a>&nbsp;&nbsp;
-      <a href="#M000008">save</a>&nbsp;&nbsp;
-      <a href="#M000006">set</a>&nbsp;&nbsp;
-      <a href="#M000007">setCheap</a>&nbsp;&nbsp;
+      <a href="#M000015">primed?</a>&nbsp;&nbsp;
+      <a href="#M000014">revert!</a>&nbsp;&nbsp;
+      <a href="#M000013">save</a>&nbsp;&nbsp;
+      <a href="#M000011">set</a>&nbsp;&nbsp;
+      <a href="#M000012">setCheap</a>&nbsp;&nbsp;
+      <a href="#M000006">setDestructOnGet</a>&nbsp;&nbsp;
       <a href="#M000005">setExpensive</a>&nbsp;&nbsp;
+      <a href="#M000010">unprime</a>&nbsp;&nbsp;
+      <a href="#M000009">unset</a>&nbsp;&nbsp;
       </div>
     </div>
 
@@ -130,7 +137,7 @@ the sadie constructor
         <tr class="top-aligned-row context-row">
           <td class="context-item-name">VERSION</td>
           <td>=</td>
-          <td class="context-item-value">&quot;0.0.4&quot;</td>
+          <td class="context-item-value">&quot;0.0.7&quot;</td>
         </tr>
         <tr class="top-aligned-row context-row">
           <td class="context-item-name">DEFAULTS</td>
@@ -173,7 +180,7 @@ resource (.res) file will have provided after the block is evaluated
             onclick="toggleCode('M000003-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000003-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 95</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 96</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-constant">Prime</span> ( <span class="ruby-identifier">primer_definition</span> )
         
         <span class="ruby-comment cmt"># validate params</span>
@@ -187,14 +194,25 @@ resource (.res) file will have provided after the block is evaluated
         <span class="ruby-comment cmt"># if initializing primers, just remember how to get back to the primer later,</span>
         <span class="ruby-comment cmt"># otherwise, prime</span>
         <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Sadie</span><span class="ruby-operator">::</span><span class="ruby-identifier">_midPrimerInit?</span>
+            
+            <span class="ruby-comment cmt"># mid primer init, just memorize primer location</span>
             <span class="ruby-constant">Sadie</span><span class="ruby-operator">::</span><span class="ruby-identifier">_memorizePrimerLocation</span>( <span class="ruby-ivar">@@mid_primer_filepath</span>,  <span class="ruby-identifier">primer_definition</span>[<span class="ruby-value str">&quot;provides&quot;</span>] )
         <span class="ruby-keyword kw">else</span>
+            
+            <span class="ruby-comment cmt"># run code block with the current sadie instance</span>
             <span class="ruby-identifier">current_sadie_instance</span> = <span class="ruby-constant">Sadie</span><span class="ruby-operator">::</span><span class="ruby-identifier">_getCurrentSadieInstance</span>
-            <span class="ruby-identifier">current_primer_filepath</span> = <span class="ruby-constant">Sadie</span><span class="ruby-operator">::</span><span class="ruby-identifier">_getCurrentPrimerFilepath</span>
             <span class="ruby-keyword kw">yield</span>( <span class="ruby-identifier">current_sadie_instance</span> )
+            
+            <span class="ruby-comment cmt"># loop thru all primer provides, ensuring each primed</span>
+            <span class="ruby-identifier">current_primer_filepath</span> = <span class="ruby-constant">Sadie</span><span class="ruby-operator">::</span><span class="ruby-identifier">_getCurrentPrimerFilepath</span>
             <span class="ruby-identifier">primer_definition</span>[<span class="ruby-value str">&quot;provides&quot;</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span> <span class="ruby-identifier">key</span> <span class="ruby-operator">|</span>
+                
+                <span class="ruby-comment cmt"># skip blank lines</span>
                 <span class="ruby-keyword kw">next</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">match</span> <span class="ruby-regexp re">/^\s*$/</span>
+                
                 <span class="ruby-comment cmt">#puts &quot;Prime&gt; providing: #{key}&quot;</span>
+                
+                <span class="ruby-comment cmt"># key primed or raise error</span>
                 <span class="ruby-identifier">current_sadie_instance</span>.<span class="ruby-identifier">primed?</span> <span class="ruby-identifier">key</span> \
                     <span class="ruby-keyword kw">or</span> <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;primer definition file: #{current_primer_filepath} was supposed to define #{key}, but did not&quot;</span>
             <span class="ruby-keyword kw">end</span>
@@ -225,7 +243,7 @@ href="Sadie.html">Sadie</a>&#8216;s constructor method
             onclick="toggleCode('M000002-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000002-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 83</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 84</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">getSadieInstance</span>( <span class="ruby-identifier">options</span> )
         <span class="ruby-constant">Sadie</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">options</span>)
     <span class="ruby-keyword kw">end</span>
@@ -270,6 +288,7 @@ href="Sadie.html">Sadie</a>&#8216;s constructor method
         <span class="ruby-ivar">@shortterm</span>                      = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
         <span class="ruby-ivar">@flag_expensive</span>                 = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
         <span class="ruby-ivar">@flag_primed</span>                    = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+        <span class="ruby-ivar">@flag_eachtimeprime</span>             = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
 
         <span class="ruby-comment cmt"># init class</span>
         <span class="ruby-constant">Sadie</span><span class="ruby-operator">::</span><span class="ruby-identifier">_checkSanity</span>
@@ -314,6 +333,95 @@ href="Sadie.html">Sadie</a>&#8216;s constructor method
 
       <h3 class="section-bar">Public Instance methods</h3>
 
+      <div id="method-M000008" class="method-detail">
+        <a name="M000008"></a>
+
+        <div class="method-heading">
+          <a href="#M000008" class="method-signature">
+          <span class="method-name">_newline</span><span class="method-args">( rval=true )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000008-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000008-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 223</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">_newline</span>( <span class="ruby-identifier">rval</span>=<span class="ruby-keyword kw">true</span> )
+        <span class="ruby-comment cmt">#puts</span>
+        <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">rval</span>
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000007" class="method-detail">
+        <a name="M000007"></a>
+
+        <div class="method-heading">
+          <a href="#M000007" class="method-signature">
+          <span class="method-name">destructOnGet?</span><span class="method-args">( key )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <h2>method: <a href="Sadie.html#M000007">destructOnGet?</a></h2>
+<p>
+returns true if the destructOnGet flag is <a
+href="Sadie.html#M000011">set</a> for the key
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000007-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000007-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 212</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">destructOnGet?</span>( <span class="ruby-identifier">key</span> )
+<span class="ruby-comment cmt">#         print &quot;destructOnGet?&gt; key #{key} &quot;</span>
+        <span class="ruby-ivar">@flag_eachtimeprime</span>.<span class="ruby-identifier">has_key?</span>( <span class="ruby-identifier">key</span> ) \
+            <span class="ruby-keyword kw">or</span> <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_newline</span>( <span class="ruby-keyword kw">false</span> )
+<span class="ruby-comment cmt">#         print &quot; defined-in-eachtimeprime &quot;</span>
+        <span class="ruby-ivar">@flag_eachtimeprime</span>[<span class="ruby-node">&quot;#{key}&quot;</span>] \
+            <span class="ruby-keyword kw">and</span> <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_newline</span>( <span class="ruby-keyword kw">true</span> )
+<span class="ruby-comment cmt">#         print &quot; defined-but-false &quot;</span>
+        <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_newline</span>(<span class="ruby-keyword kw">false</span>)
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000016" class="method-detail">
+        <a name="M000016"></a>
+
+        <div class="method-heading">
+          <a href="#M000016" class="method-signature">
+          <span class="method-name">expensive?</span><span class="method-args">( k )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <h2>method: <a href="Sadie.html#M000015">primed?</a></h2>
+<pre>
+  INTERNAL: this method should only be called the the class method, Prime
+</pre>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000016-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000016-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 310</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">expensive?</span>( <span class="ruby-identifier">k</span> )
+        <span class="ruby-ivar">@flag_expensive</span>.<span class="ruby-identifier">has_key?</span>( <span class="ruby-identifier">k</span> ) <span class="ruby-keyword kw">or</span> <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span>;
+        <span class="ruby-ivar">@flag_expensive</span>[<span class="ruby-node">&quot;#{k}&quot;</span>] \
+            <span class="ruby-keyword kw">and</span> <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
+        <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span>
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
       <div id="method-M000004" class="method-detail">
         <a name="M000004"></a>
 
@@ -334,8 +442,24 @@ directed by the resource (.res) files
             onclick="toggleCode('M000004-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000004-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 126</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 138</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get</span>( <span class="ruby-identifier">k</span> )
+        
+        <span class="ruby-comment cmt"># if it's already set, return known answer</span>
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">_isset?</span>( <span class="ruby-identifier">k</span> )
+            
+            <span class="ruby-comment cmt"># _get the return value</span>
+            <span class="ruby-identifier">return_value</span> = <span class="ruby-identifier">_get</span>( <span class="ruby-identifier">k</span> )
+            
+            <span class="ruby-comment cmt"># unset and unprime if destructOnGet?</span>
+            <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">destructOnGet?</span>( <span class="ruby-identifier">k</span> )
+<span class="ruby-comment cmt">#                 puts &quot;destructing #{k}&quot;</span>
+                <span class="ruby-identifier">unset</span>( <span class="ruby-identifier">k</span> )
+                <span class="ruby-identifier">unprime</span>( <span class="ruby-identifier">k</span> )
+            <span class="ruby-keyword kw">end</span>
+            
+            <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">return_value</span>
+        <span class="ruby-keyword kw">end</span>
         
         <span class="ruby-comment cmt"># prime if not yet primed</span>
         <span class="ruby-identifier">primed?</span>( <span class="ruby-identifier">k</span> ) \
@@ -343,35 +467,75 @@ directed by the resource (.res) files
             
         <span class="ruby-comment cmt"># if not expensive, then return what's already known</span>
         <span class="ruby-identifier">expensive?</span>( <span class="ruby-identifier">k</span> ) \
-            <span class="ruby-keyword kw">or</span> <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_get</span>( <span class="ruby-identifier">k</span> )
+            <span class="ruby-keyword kw">and</span> <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_recallExpensive</span>( <span class="ruby-identifier">k</span> )
             
-        <span class="ruby-comment cmt"># expensive, so recall from file</span>
-        <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_recallExpensive</span>( <span class="ruby-identifier">k</span> )
+        <span class="ruby-comment cmt"># _get the return value</span>
+        <span class="ruby-identifier">return_value</span> = <span class="ruby-identifier">_get</span>( <span class="ruby-identifier">k</span> )
+        
+        <span class="ruby-comment cmt"># unset and unprime if destructOnGet?</span>
+        <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">destructOnGet?</span>( <span class="ruby-identifier">k</span> )
+<span class="ruby-comment cmt">#                 puts &quot;destructing #{k}&quot;</span>
+            <span class="ruby-identifier">unset</span>( <span class="ruby-identifier">k</span> )
+            <span class="ruby-identifier">unprime</span>( <span class="ruby-identifier">k</span> )
+        <span class="ruby-keyword kw">end</span>
+        
+        <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">return_value</span>
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>
         </div>
       </div>
 
-      <div id="method-M000009" class="method-detail">
-        <a name="M000009"></a>
+      <div id="method-M000015" class="method-detail">
+        <a name="M000015"></a>
 
         <div class="method-heading">
-          <a href="#M000009" class="method-signature">
+          <a href="#M000015" class="method-signature">
+          <span class="method-name">primed?</span><span class="method-args">( k )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <h2>method: <a href="Sadie.html#M000015">primed?</a></h2>
+<pre>
+  INTERNAL: this method should only be called the the class method, Prime
+</pre>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000015-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000015-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 298</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">primed?</span>( <span class="ruby-identifier">k</span> )
+        <span class="ruby-ivar">@flag_primed</span>.<span class="ruby-identifier">has_key?</span>( <span class="ruby-identifier">k</span> ) \
+            <span class="ruby-keyword kw">or</span> <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span>
+        <span class="ruby-ivar">@flag_primed</span>[<span class="ruby-node">&quot;#{k}&quot;</span>] \
+            <span class="ruby-keyword kw">and</span> <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
+        <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span>
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000014" class="method-detail">
+        <a name="M000014"></a>
+
+        <div class="method-heading">
+          <a href="#M000014" class="method-signature">
           <span class="method-name">revert!</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
-          <h2>method: <a href="Sadie.html#M000009">revert!</a></h2>
+          <h2>method: <a href="Sadie.html#M000014">revert!</a></h2>
 <p>
 return to last saved state
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000009-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000009-source">
+            onclick="toggleCode('M000014-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000014-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 194</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 284</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">revert!</span>
         
         <span class="ruby-ivar">@shortterm</span> = {
@@ -386,25 +550,25 @@ return to last saved state
         </div>
       </div>
 
-      <div id="method-M000008" class="method-detail">
-        <a name="M000008"></a>
+      <div id="method-M000013" class="method-detail">
+        <a name="M000013"></a>
 
         <div class="method-heading">
-          <a href="#M000008" class="method-signature">
+          <a href="#M000013" class="method-signature">
           <span class="method-name">save</span><span class="method-args">()</span>
           </a>
         </div>
       
         <div class="method-description">
-          <h2>method: <a href="Sadie.html#M000008">save</a></h2>
+          <h2>method: <a href="Sadie.html#M000013">save</a></h2>
 <p>
 serialize to session file
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000008-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000008-source">
+            onclick="toggleCode('M000013-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000013-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 182</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 272</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">save</span>
         <span class="ruby-identifier">session_filepath</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">expand_path</span>( <span class="ruby-value str">&quot;session.&quot;</span><span class="ruby-operator">+</span><span class="ruby-identifier">value</span>, <span class="ruby-identifier">get</span>( <span class="ruby-value str">&quot;sadie.sessions_dirpath&quot;</span> ) )
         <span class="ruby-identifier">serialized_value</span>                = <span class="ruby-constant">Marshal</span><span class="ruby-operator">::</span><span class="ruby-identifier">dump</span>( [ <span class="ruby-ivar">@shortterm</span>, <span class="ruby-ivar">@flag_primed</span>, <span class="ruby-ivar">@flag_expensive</span> ] )
@@ -417,25 +581,25 @@ serialize to session file
         </div>
       </div>
 
-      <div id="method-M000006" class="method-detail">
-        <a name="M000006"></a>
+      <div id="method-M000011" class="method-detail">
+        <a name="M000011"></a>
 
         <div class="method-heading">
-          <a href="#M000006" class="method-signature">
+          <a href="#M000011" class="method-signature">
           <span class="method-name">set</span><span class="method-args">( k, v )</span>
           </a>
         </div>
       
         <div class="method-description">
-          <h2>method: <a href="Sadie.html#M000006">set</a></h2>
+          <h2>method: <a href="Sadie.html#M000011">set</a></h2>
 <p>
-alias for <a href="Sadie.html#M000007">setCheap</a>(k,v)
+alias for <a href="Sadie.html#M000012">setCheap</a>(k,v)
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000006-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000006-source">
+            onclick="toggleCode('M000011-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000011-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 156</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 246</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">set</span>( <span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span> )
         <span class="ruby-identifier">setCheap</span>( <span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span> )
     <span class="ruby-keyword kw">end</span>
@@ -444,27 +608,27 @@ alias for <a href="Sadie.html#M000007">setCheap</a>(k,v)
         </div>
       </div>
 
-      <div id="method-M000007" class="method-detail">
-        <a name="M000007"></a>
+      <div id="method-M000012" class="method-detail">
+        <a name="M000012"></a>
 
         <div class="method-heading">
-          <a href="#M000007" class="method-signature">
-          <span class="method-name">setCheap</span><span class="method-args">(k,v)</span>
+          <a href="#M000012" class="method-signature">
+          <span class="method-name">setCheap</span><span class="method-args">( k, v )</span>
           </a>
         </div>
       
         <div class="method-description">
-          <h2>method: <a href="Sadie.html#M000007">setCheap</a></h2>
+          <h2>method: <a href="Sadie.html#M000012">setCheap</a></h2>
 <p>
 the cheap setter. key, value pairs stored via this method are kept in
 memory
 </p>
           <p><a class="source-toggle" href="#"
-            onclick="toggleCode('M000007-source');return false;">[Source]</a></p>
-          <div class="method-source-code" id="M000007-source">
+            onclick="toggleCode('M000012-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000012-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 163</span>
-    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setCheap</span>(<span class="ruby-identifier">k</span>,<span class="ruby-identifier">v</span>)
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 253</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setCheap</span>( <span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span> )
         
         <span class="ruby-comment cmt"># set it, mark not expensive and primed</span>
         <span class="ruby-identifier">_set</span>( <span class="ruby-identifier">k</span>, <span class="ruby-identifier">v</span> )
@@ -484,6 +648,43 @@ memory
         </div>
       </div>
 
+      <div id="method-M000006" class="method-detail">
+        <a name="M000006"></a>
+
+        <div class="method-heading">
+          <a href="#M000006" class="method-signature">
+          <span class="method-name">setDestructOnGet</span><span class="method-args">( key, turnon=true )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <h2>method: <a href="Sadie.html#M000006">setDestructOnGet</a></h2>
+<pre>
+   key value will go away and key will be unprimed and unset after next get
+
+   NOTE: this doesn't make sense with keys that were set via setExpensive
+         so it can be set, but nothing's going to happen differently
+</pre>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000006-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000006-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 198</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setDestructOnGet</span>( <span class="ruby-identifier">key</span>, <span class="ruby-identifier">turnon</span>=<span class="ruby-keyword kw">true</span> )
+<span class="ruby-comment cmt">#         puts &quot;setDestructOnGet( #{key}, #{turnon} )&quot;</span>
+        <span class="ruby-keyword kw">if</span> ( <span class="ruby-identifier">turnon</span> )
+<span class="ruby-comment cmt">#             puts &quot;turning on destructOnGet for key: #{key}&quot;</span>
+            <span class="ruby-ivar">@flag_eachtimeprime</span>[<span class="ruby-node">&quot;#{key}&quot;</span>] = <span class="ruby-keyword kw">true</span>
+            <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span>
+        <span class="ruby-keyword kw">end</span>
+        <span class="ruby-ivar">@flag_eachtimeprime</span>.<span class="ruby-identifier">has_key?</span>( <span class="ruby-identifier">key</span> ) \
+            <span class="ruby-keyword kw">and</span> <span class="ruby-ivar">@flag_eachtimeprime</span>.<span class="ruby-identifier">delete</span>( <span class="ruby-identifier">key</span> )
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
       <div id="method-M000005" class="method-detail">
         <a name="M000005"></a>
 
@@ -494,7 +695,7 @@ memory
         </div>
       
         <div class="method-description">
-          <h2>method: <a href="Sadie.html#M000007">setCheap</a></h2>
+          <h2>method: <a href="Sadie.html#M000012">setCheap</a></h2>
 <p>
 the expensive setter. key, value pairs stored via this method are not kept
 in memory but are stored to file and recalled as needed
@@ -503,7 +704,7 @@ in memory but are stored to file and recalled as needed
             onclick="toggleCode('M000005-source');return false;">[Source]</a></p>
           <div class="method-source-code" id="M000005-source">
 <pre>
-<span class="ruby-comment cmt"># File lib/sadie.rb, line 144</span>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 182</span>
     <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">setExpensive</span>(<span class="ruby-identifier">k</span>,<span class="ruby-identifier">v</span>)
         <span class="ruby-identifier">expensive_filepath</span>              = <span class="ruby-identifier">_computeExpensiveFilepath</span>( <span class="ruby-identifier">k</span> )
         <span class="ruby-identifier">serialized_value</span>                = <span class="ruby-constant">Marshal</span><span class="ruby-operator">::</span><span class="ruby-identifier">dump</span>( <span class="ruby-identifier">v</span> )
@@ -512,6 +713,66 @@ in memory but are stored to file and recalled as needed
         }
         <span class="ruby-identifier">_expensive</span>( <span class="ruby-identifier">k</span>, <span class="ruby-keyword kw">true</span> )
         <span class="ruby-identifier">_primed</span>( <span class="ruby-identifier">k</span>, <span class="ruby-keyword kw">true</span> )
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000010" class="method-detail">
+        <a name="M000010"></a>
+
+        <div class="method-heading">
+          <a href="#M000010" class="method-signature">
+          <span class="method-name">unprime</span><span class="method-args">( key )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <h2>method: <a href="Sadie.html#M000010">unprime</a></h2>
+<p>
+unprimes k. Note that this does not <a href="Sadie.html#M000009">unset</a>
+the value, so <a href="Sadie.html#M000004">get</a>(key) will continue to
+return whatever it otherwise would have. run <a
+href="Sadie.html#M000009">unset</a> as well to have the primer run again.
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000010-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000010-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 240</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">unprime</span>( <span class="ruby-identifier">key</span> )
+        <span class="ruby-identifier">_primed</span>( <span class="ruby-identifier">key</span>, <span class="ruby-keyword kw">false</span> )
+    <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="method-M000009" class="method-detail">
+        <a name="M000009"></a>
+
+        <div class="method-heading">
+          <a href="#M000009" class="method-signature">
+          <span class="method-name">unset</span><span class="method-args">( key )</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <h2>method: <a href="Sadie.html#M000009">unset</a></h2>
+<p>
+unsets the value of k. Note that this does not <a
+href="Sadie.html#M000010">unprime</a>, so <a
+href="Sadie.html#M000004">get</a>(key) will simply return nil. Run with <a
+href="Sadie.html#M000010">unprime</a> to have the primer run again
+</p>
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000009-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000009-source">
+<pre>
+<span class="ruby-comment cmt"># File lib/sadie.rb, line 232</span>
+    <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">unset</span>( <span class="ruby-identifier">key</span> )
+        <span class="ruby-identifier">_unset</span>( <span class="ruby-identifier">key</span> )
     <span class="ruby-keyword kw">end</span>
 </pre>
           </div>

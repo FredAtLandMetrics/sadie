@@ -8,7 +8,8 @@ class TestSadieToplevel < Test::Unit::TestCase
     def test_simple
         Dir.mktmpdir("sadie_testdir") do | dir |
             sadie = Sadie::getSadieInstance( {  "sadie.primers_dirpath" => "test/test_primers",
-                                                "sadie.sessions_dirpath" => dir                    } )
+                                                "sadie.sessions_dirpath" => dir,
+                                                "sadie.primer_plugins_dirpath" => "lib/sadie/primer_plugins" } )
             
             # test top-level ini
             assert_equal( sadie.get( "toplevel.somegroup.somekey"       ), "someval"    )

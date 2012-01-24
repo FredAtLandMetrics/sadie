@@ -1,9 +1,7 @@
-# requires dbconx plugin to be installed as well
-
-require 'sadie'
+# WARNING: THIS DOESN'T WORK YET!!!
 
 Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
-                               "accepts-block" => true } ) do |sadie, primer_file_filepath, block|
+                               "accepts-block" => true } ) do |sadie, key_prefix, primer_file_filepath, block|
 
     # read query from file @filepath, ditch newlines
     f = open( primer_file_filepath )
@@ -12,7 +10,7 @@ Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
     query = query.gsub(/\n/,'')
     
     # get the database and run query
-    db_key = Sadie::pathToKey( primer_file_filepath, 1 ) 
+    db_key = key_prefix+".db.conx"
     sadie.get( db_key ) do | dbh |
         
         # run the query

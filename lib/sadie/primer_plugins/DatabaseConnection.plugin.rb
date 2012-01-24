@@ -1,9 +1,7 @@
-require 'rubygems'
-require 'sadie'
-#require 'dbi'
+# WARNING: THIS DOESN'T WORK YET!!!
 
 Sadie::registerPrimerPlugin( {  "match" => /\.dbi\.conx$/,
-                                "accepts-block" => true } ) do |sadie, primer_file_filepath, block|
+                                "accepts-block" => true } ) do |sadie, key_prefix, primer_file_filepath, block|
 
     # build parameter hash
     dbparams = Hash.new

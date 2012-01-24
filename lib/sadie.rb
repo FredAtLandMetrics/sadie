@@ -9,7 +9,7 @@ Bundler.require(:default)
 # ==Description: Sadie
 # Sadie is a data framework intended to ease the pain of constructing, accessing, and 
 # managing the resources required by large stores of inter-related data. It supports
-# sessions, lazy on-demand, one-time evaluation and file-based storage/retrieval
+# sessions, lazy, on-demand, one-time evaluation and file-based storage/retrieval
 # operations for resource-heavy data.
 # 
 # For simplicity, it supports simple, ini-style data
@@ -19,47 +19,95 @@ Bundler.require(:default)
 
 class Sadie
     
+    # ==method: Sadie::getSadieInstance
+    #
+    # returns a new Sadie instance.  Options match those of Sadie's constructor method
+    def self.getSadieInstance( options )
+        Sadie.new(options)
+    end
+
+    # ==method: Sadie::setCurrentSadieInstance
+    #
+    # this is called just prior to calling a primer plugin to handle a primer to provide
+    # a current sadie instance for Sadie::getCurrentSadieInstance to return
+    def self.setCurrentSadieInstance ( instance )
+        @@current_sadie_instance = instance
+    end
+    
+    # ==method: Sadie::setCurrentSadieInstance
+    #
+    # called by plugin handlers to get access to the current Sadie instance
+    def self.getCurrentSadieInstance
+        @@current_sadie_instance
+    end    
+    
+    # ==method: Sadie::Prime
+    #
+    # called my the .res files to register the keys the .res will prime for
+    # 
+    # accepts as an argument a hash and a block.  The hash must include the key:
+    # 'provides' and it must define an array
+    # of keys that the calling resource (.res) file will have provided after the block is
+    # evaluated
+    def self.prime ( primer_definition, &block )
+        current_sadie_instance = Sadie::getCurrentSadieInstance
+        current_sadie_instance.prime( primer_definition, &block )
+    end
+    
+    # ==method: Sadie::registerPrimerPlugin
+    #
+    # this method is called in the .plugin.rb files to register new plugin types
+    #
+    def self.registerPrimerPlugin ( arghash, &block )
+        current_sadie_instance = Sadie::getCurrentSadieInstance
+        current_sadie_instance.registerPrimerPlugin( arghash, &block )
+    end
+
     
     # ==method: constructor
     #   options can include any kay, value pairs but the following key values bear mention:
     #     REQUIRED
     #
     #       sadie.sessions_dirpath
-    #           or
-    #         sadie.session_id
-    #           or
-    #         sadie.session_filepath  <- this is probably a bad call, use with caution
+    #             or
+    #           sadie.session_id
+    #             or
+    #           sadie.session_filepath  <- this is probably a bad call, use with caution
     #     
     #       and
     #
-    #       sadie.primers_dirpath
+    #         sadie.primers_dirpath
+    #
+    #       and
+    #         sadie.primer_plugins_dirpath
     def initialize( options )
         
-        # start with blank slate short-term memory, primed and expensive flag hashes
-        @shortterm                      = Hash.new
-        @flag_expensive                 = Hash.new
-        @flag_primed                    = Hash.new
-        @flag_eachtimeprime             = Hash.new
-
-        # init class
-        Sadie::_checkSanity
-        
-        # init mid_primer_initialization if not already done
-        if ! defined? @@mid_primer_initialization
-            @@mid_primer_initialization = false
-            @@mid_primer_filepath       = nil
-            @@mid_primer_toplevel_primer_dirpath = nil
-        end
+        # check instance sanity
+        _checkInstanceSanity        
+        _checkClassSanity
         
         # internalize defaults to shortterm
         DEFAULTS.each do |key, value|
             _set( key, value )
         end
         
-        # internalize supplied defaults
+        # internalize supplied defaults, postponing a set of sadie.primers_dirpath
+        # until the end if one is supplied.  The reason for this is that the setter
+        # attempts to read the plugins and if the primer plugin dirpath has not
+        # yet been set, then it'll choke if it processes the wrong one first
+        delay_set_primers_dirpath = nil
+      
+        # iterate over constructor args, but do primers_dirpath last since it
+        # causes a call to initializePrimers
         options.each do |key, value|
-            set( key, value )
+            if ( key.eql? "sadie.primers_dirpath")
+                delay_set_primers_dirpath = value
+            else
+                set( key, value )
+            end
         end
+        defined? delay_set_primers_dirpath \
+            and set( "sadie.primers_dirpath", delay_set_primers_dirpath )
         
         # if a path to a session is given, init using session file
         if defined? options[:sadie.session_filepath] && options[:sadie.session_filepath].match(/^[^\s]+$/)
@@ -78,23 +126,7 @@ class Sadie
         
     end
     
-    # ==method: Sadie::getSadieInstance
-    #
-    # returns a new Sadie instance.  Options match those of Sadie's constructor method
-    def self.getSadieInstance( options )
-        Sadie.new(options)
-    end
-
-    # ==method: Sadie::Prime
-    #
-    # called my the .res files to register the keys the .res will prime for
-    # 
-    # accepts as an argument a hash and a block.  The hash must include the key:
-    # 'provides' and it must define an array
-    # of keys that the calling resource (.res) file will have provided after the block is
-    # evaluated
-    def self.Prime ( primer_definition )
-        
+    def prime ( primer_definition, &block )
         # validate params
         defined? primer_definition \
             or raise "Prime called without parameters"
@@ -105,18 +137,17 @@ class Sadie
         
         # if initializing primers, just remember how to get back to the primer later,
         # otherwise, prime
-        if Sadie::_midPrimerInit?
+        if midPrimerInit?
             
             # mid primer init, just memorize primer location
-            Sadie::_memorizePrimerLocation( @@mid_primer_filepath,  primer_definition["provides"] )
+            memorizePrimerLocation( @@mid_primer_filepath,  primer_definition["provides"] )
         else
             
             # run code block with the current sadie instance
-            current_sadie_instance = Sadie::_getCurrentSadieInstance
-            yield( current_sadie_instance )
+            block.call( self )
             
             # loop thru all primer provides, ensuring each primed
-            current_primer_filepath = Sadie::_getCurrentPrimerFilepath
+            current_primer_filepath = getCurrentPrimerFilepath
             primer_definition["provides"].each do | key |
                 
                 # skip blank lines
@@ -125,11 +156,77 @@ class Sadie
                 #puts "Prime> providing: #{key}"
                 
                 # key primed or raise error
-                current_sadie_instance.primed? key \
+                primed? key \
                     or raise "primer definition file: #{current_primer_filepath} was supposed to define #{key}, but did not"
             end
         end
+        
     end
+
+    def registerPrimerPlugin ( arghash, &block )
+        if midPluginInit?
+            
+            # init mode, just store arghash info
+            accepts_block = arghash.has_key?( "accepts-block" ) && arghash["accepts-block"] ? true : false
+            prime_on_init = arghash.has_key?( "prime-on-init" ) && arghash["prime-on-init"] ? true : false
+            regPluginMatch( arghash["match"], @@mid_plugin_filepath, accepts_block, prime_on_init )
+            
+        else
+            
+            # prime mode
+            currentPrimerPluginPrimerOnInit? \
+                or setMidPrimerInit( @@current_primer_filepath )
+            key_prefix = getCurrentPrimerKeyPrefix
+            if currentPrimerPluginAcceptsBlock?
+                
+                # call with block only if accepts block
+                yield( self, key_prefix, @@current_primer_filepath, block )
+                
+            else
+                
+                yield( self, key_prefix, @@current_primer_filepath )
+                
+            end
+            currentPrimerPluginPrimerOnInit? \
+                or unsetMidPrimerInit
+            
+        end
+    end
+    
+    
+    
+#     # ==method: pathToKey
+#     #
+#     # returns a dot-separated version of the filepath such that
+#     #   with parentify=1 returns dot path to directory file is in,
+#     #   with parentify=2 returns dot path to directory above directory file is in, etc.
+#     def pathToKey( filepath, parentify=0 )
+#         
+#         # separate path into basename,dirname
+#         path_basename = File.basename( filepath )
+#         path_dirname = File.dirname( filepath )
+#         
+#         # create stack of dir components
+#         path_stack = Array.new
+#         temp_path_stack = path_dirname.split(/\//)
+#         temp_path_stack.each do |item|
+#             next if item.match(/^\s*$/)
+#             path_stack.push item
+#         end
+#         
+#         # lose the suffix on the basename
+#         root_path_basename = path_basename.gsub( /\.[^\.]*$/, "" )
+#         path_stack.push( root_path_basename )
+#         if parentify > 1
+#             parentify.times do |i|
+#                 path_stack.pop
+#             end
+#         end
+#         
+#         path_stack.join( "," )
+#         
+#     end
+
     
     # ==method: get
     #
@@ -137,108 +234,68 @@ class Sadie
     # completely behind-the-scenes as directed by the resource (.res) files
     def get( k )
         
+        
+        if ! isset?( k )
+            # prime if not yet primed
+            primed?( k ) or _prime( k )
+        end
+        
+        return _recallExpensive( k ) if expensive?( k )
+        
         # if it's already set, return known answer
-        if _isset?( k )
+        if isset?( k )
             
             # _get the return value
             return_value = _get( k )
             
             # unset and unprime if destructOnGet?
-            if destructOnGet?( k )
-#                 puts "destructing #{k}"
-                unset( k )
-                unprime( k )
-            end
+            destroyOnGet?( k ) \
+                and destroy! k
             
             return return_value
         end
         
-        # prime if not yet primed
-        primed?( k ) \
-            or _prime( k )
-            
-        # if not expensive, then return what's already known
-        expensive?( k ) \
-            and return _recallExpensive( k )
-            
-        # _get the return value
-        return_value = _get( k )
-        
-        # unset and unprime if destructOnGet?
-        if destructOnGet?( k )
-#                 puts "destructing #{k}"
-            unset( k )
-            unprime( k )
-        end
-        
-        return return_value
     end
     
-    
-    # ==method: setCheap
+    # ==method: isset?
     #
-    # the expensive setter.  key, value pairs stored via this method are not kept in memory
-    # but are stored to file and recalled as needed
-    def setExpensive(k,v)
-        expensive_filepath              = _computeExpensiveFilepath( k )
-        serialized_value                = Marshal::dump( v )
-        File.open(expensive_filepath, 'w') { |f|
-            f.write( serialized_value )
-        }
-        _expensive( k, true )
-        _primed( k, true )
+    # returns true if sadie has a value for the key
+    def isset?( key )
+        return @shortterm.has_key?( key )
     end
     
-    # ==method: setDestructOnGet
+    # ==method: setDestroyOnGet
     #
     #    key value will go away and key will be unprimed and unset after next get
     #
     #    NOTE: this doesn't make sense with keys that were set via setExpensive
     #          so it can be set, but nothing's going to happen differently
-    def setDestructOnGet( key, turnon=true )
-#         puts "setDestructOnGet( #{key}, #{turnon} )"
+    def setDestroyOnGet( key, turnon=true )
         if ( turnon )
-#             puts "turning on destructOnGet for key: #{key}"
-            @flag_eachtimeprime["#{key}"] = true
+            @flag_destroyonget["#{key}"] = true
             return true
         end
-        @flag_eachtimeprime.has_key?( key ) \
-            and @flag_eachtimeprime.delete( key )
+        @flag_destroyonget.has_key?( key ) \
+            and @flag_destroyonget.delete( key )
     end
     
-    # ==method: destructOnGet?
+    # ==method: destroy!
+    #
+    # remove the key from sadie
+    def destroy! ( key )
+        unset( key )
+        primed?( key ) and unprime( key )
+    end
+    
+    # ==method: destroyOnGet?
     #
     # returns true if the destructOnGet flag is set for the key
-    def destructOnGet?( key )
-#         print "destructOnGet?> key #{key} "
-        @flag_eachtimeprime.has_key?( key ) \
+    def destroyOnGet?( key )
+        @flag_destroyonget.has_key?( key ) \
             or return _newline( false )
-#         print " defined-in-eachtimeprime "
-        @flag_eachtimeprime["#{key}"] \
+        @flag_destroyonget["#{key}"] \
             and return _newline( true )
-#         print " defined-but-false "
         return _newline(false)
-    end
-    
-    def _newline( rval=true )
-        #puts
-        return rval
-    end
-    
-    # ==method: unset
-    # unsets the value of k.  Note that this does not unprime, so
-    # get(key) will simply return nil. Run with unprime to have the
-    # primer run again
-    def unset( key )
-        _unset( key )
-    end
-    
-    # ==method: unprime
-    # unprimes k.  Note that this does not unset the value, so
-    # get(key) will continue to return whatever it otherwise would have.
-    # run unset as well to have the primer run again.
-    def unprime( key )
-        _primed( key, false )
     end
     
     # ==method: set
@@ -252,29 +309,67 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
+#         puts "setCheap( #{k}, #{v} )"
+        
         # set it, mark not expensive and primed
         _set( k, v )
         _expensive( k, false )
-        _primed( k, true )
         
         # if we've reset the primers dirpath, init the primers
         if k.eql?( "sadie.primers_dirpath" )
-            Sadie::_setMidPrimerTopLevelPrimersDirpath( v )
-            Sadie::_setCurrentSadieInstance( self )
-            Sadie::_init_primers
+            initializePrimers
+        end
+        
+       _primed( k, true )
+        
+        # if we've reset the primers dirpath, init the primers
+        if k.eql?( "sadie.primers_dirpath" )
+            Sadie::setCurrentSadieInstance( self )
         end
         
     end
+    
+    def cheap?( k )
+        ! expensive? ( k )
+    end
+    
+    # ==method: setExpensive
+    #
+    # the expensive setter.  key, value pairs stored via this method are not kept in memory
+    # but are stored to file and recalled as needed
+    def setExpensive(k,v)
+        expensive_filepath              = _computeExpensiveFilepath( k )
+        serialized_value                = Marshal::dump( v )
+        File.open(expensive_filepath, 'w') { |f|
+            f.write( serialized_value )
+        }
+        _expensive( k, true )
+        _primed( k, true )
+    end
+
+    # ==method: primed?
+    #
+    #   INTERNAL: this method should only be called the the class method, Prime
+    #
+    def expensive?( k )
+        @flag_expensive.has_key?( k ) or return false;
+        @flag_expensive["#{k}"] \
+            and return true
+        return false
+    end
+    
     
     # ==method: save
     #
     # serialize to session file
     def save
-        session_filepath = File.expand_path( "session."+value, get( "sadie.sessions_dirpath" ) )
+        session_id = get("sadie.session_id")
+        session_filepath = File.expand_path( "session."+session_id, get( "sadie.sessions_dirpath" ) )
         serialized_value                = Marshal::dump( [ @shortterm, @flag_primed, @flag_expensive ] )
         File.open(session_filepath, 'w') { |f|
             f.write( serialized_value )
-        }        
+        }
+        return session_id
     end
     
     # ==method: revert!
@@ -291,6 +386,18 @@ class Sadie
         _initializeWithSessionId( get( "sadie.session_id" ) )
     end
     
+
+    
+    private
+
+    # ==method: unprime
+    # unprimes k.  Note that this does not unset the value, so
+    # get(key) will continue to return whatever it otherwise would have.
+    # run unset as well to have the primer run again.
+    def unprime( key )
+        _primed( key, false )
+    end
+    
     # ==method: primed?
     #
     #   INTERNAL: this method should only be called the the class method, Prime
@@ -303,121 +410,296 @@ class Sadie
         return false
     end
     
-    # ==method: primed?
-    #
-    #   INTERNAL: this method should only be called the the class method, Prime
-    #
-    def expensive?( k )
-        @flag_expensive.has_key?( k ) or return false;
-        @flag_expensive["#{k}"] \
-            and return true
-        return false
+    # direct access getter for shortterm memory
+    def _get( key )
+        value = @shortterm["#{key}"]
+        return value
     end
     
     
     
-    private
-    
-    
-    def _prime ( k )
-#         puts "_prime( #{k} )"
-        # fetch primers dirpath and validate the primer hash
-        primer_dirpath = _get("sadie.primers_dirpath")
-        @@primer_hash.has_key?(primer_dirpath) \
-            or @@primer_hash[primer_dirpath] = Hash.new
+    def primerPluginRegistered?( filename )
         
-        primers = @@primer_hash[primer_dirpath]
-        primers.has_key?( k ) or return true
-                
-        if primer_filepath = primers[k]
-#             puts "loading filepath: #{primer_filepath}"
-            Sadie::_setCurrentPrimerFilepath(primer_filepath)
-            Sadie::_setCurrentSadieInstance( self )
-            load primer_filepath
+        @@primer_plugin_lookup.each do | plugin_array |
+            re, path,accepts_block = plugin_array
+            re.match( filename ) \
+                and return true
         end
-        return true
+        return false;
+    end
+    
+    def primeWithPlugin( key_prefix, filepath )
         
-    end
-    
-    def self._setCurrentPrimerFilepath ( filepath )
-        @@current_primer_filepath = filepath
-    end
-    
-    def self._getCurrentPrimerFilepath
-        @@current_primer_filepath
-    end
-    
-    def self._setCurrentSadieInstance ( instance )
-        @@current_sadie_instance = instance
-    end
-    
-    def self._getCurrentSadieInstance
-        @@current_sadie_instance
-    end
-    
-    
-    def self._init_primers( key_prefix="", current_dirpath="" )
-        
-        # default to the top-level primers dirpath
-        if current_dirpath.empty?
-            sadie_instance = Sadie::_getCurrentSadieInstance
-            current_dirpath = sadie_instance.get( "sadie.primers_dirpath" ) \
-                or raise "sadie.primers_dirpath not set"
+        # when this primes, the block run of registerPrimerPlugin needs
+        # to know whether or not it accepts block
+        @@primer_plugin_lookup.each do | plugin_array |
+           
+           # we just need to match the basename
+           filename = File.basename( filepath )
+           
+           regexp, plugin_filepath, accepts_block, prime_on_init = plugin_array
+           
+           if regexp.match( filename )
+               
+               currentPrimerPluginAcceptsBlock( accepts_block )
+               currentPrimerPluginPrimeOnInit( prime_on_init )
+               
+               plugin_filename = File.basename( plugin_filepath )
+               
+               load( plugin_filepath )
+               
+               return
+           end
         end
+    end
+    
+    def currentPrimerPluginAcceptsBlock( accepts )
+        @@primer_plugin_accepts_block = accepts
+    end
+    
+    def currentPrimerPluginAcceptsBlock?
+        @@primer_plugin_accepts_block
+    end
+    
+    def currentPrimerPluginPrimeOnInit( prime_on_init )
+        @@primer_plugin_prime_on_init = prime_on_init
+    end
+    
+    def currentPrimerPluginPrimerOnInit?
+        @@primer_plugin_prime_on_init
+    end
+    
+    def setMidPluginInit( filepath )
+        @@mid_plugin_initialization     = true
+        @@mid_plugin_filepath           = filepath
+    end
+    
+    def unsetMidPluginInit
+        @@mid_plugin_initialization     = false
+    end
+    
+    def midPluginInit?
+        @@mid_plugin_initialization
+    end
+    
+    def regPluginMatch ( regexp, filepath, accepts_block, prime_on_init )
+        @@primer_plugin_lookup.push( [ regexp, filepath, accepts_block, prime_on_init ] )
+    end
+    
+    def primerPluginsInitialized?
+        @@primer_plugins_initialized
+    end
+    
+    # == initializePrimerPlugins
+    #
+    # register all the primer plugins
+    #
+    # called by initializePrimers so it's not necessary to call this separate from that
+    def initializePrimerPlugins
         
+        plugins_dirpath = get( "sadie.primer_plugins_dirpath" ) \
+            or raise 'sadie.primer_plugins_dirpath not set'
         
+        puts "Initializing primer plugins..."
+        
+        # load the plugins
+        Dir.foreach( plugins_dirpath ) do |filename|
+            next if ! filename.match( /\.plugin\.rb$/ )
             
-        # loop thru each file in the directory, recurse into subdirs and
-        # process known filetypes
+            filepath = File.expand_path( filename, plugins_dirpath )
+            
+            puts "initializing primer plugin with file: #{filename}"
+            
+            setMidPluginInit( filepath )
+            load( filepath )
+            unsetMidPluginInit
+        end
+        @@primer_plugins_initialized = true
+    end
+    
+    def setMidPrimerInit ( filepath )
+        @@mid_primer_initialization     = true
+        @@mid_primer_filepath           = filepath
+    end
+    
+    def unsetMidPrimerInit
+        @@mid_primer_initialization     = false
+    end
+    
+    def midPrimerInit?
+        @@mid_primer_initialization \
+            and return true;
+        return false;
+    end
+
+    
+    
+    def primersInitialized? ( toplevel_dirpath )
+        @@flag_primed.has_key?( toplevel_dirpath ) \
+            or return false;
+        return @@flag_primed[toplevel_dirpath]
+    end
+    
+    def initializePrimers
+        
+        Sadie::setCurrentSadieInstance( self )
+        
+        # make sure primer plugins have been initialized
+        primerPluginsInitialized? \
+            or initializePrimerPlugins
+        
+        
+        primers_dirpath = get( "sadie.primers_dirpath" ) \
+            or raise "sadie.primers_dirpath not set"
+
+        return true if primersInitialized? primers_dirpath
+
+        puts "Initializing primers..."
+        initializePrimerDirectory( "", primers_dirpath )
+        
+        
+        @@flag_primed[primers_dirpath] = true
+    end
+    
+    def initializePrimerDirectory( key_prefix, current_dirpath )
+        puts "initializing primer directory: #{current_dirpath}"
         Dir.foreach( current_dirpath ) do |filename|
+            
+           # skip the dit dirs
+            next if filename.eql?(".") || filename.eql?("..")
             
             filepath = File.expand_path( filename, current_dirpath )
             
-            if File.directory?( filepath )
-                
-                # recurse
-                filename.eql?(".") || filename.eql?("..") \
-                    or Sadie::_init_primers( key_prefix + "." + filename,  filepath )
+            if File.directory? filepath
+                new_key_prefix = key_prefix + '.' + filename
+                new_key_prefix = new_key_prefix.gsub(/^\.+/,"")
+                initializePrimerDirectory( new_key_prefix, filepath )
             else
-                
-                # proc known filetypes
-                if matches = filename.match( /^(.*)\.ini$/ )
-                    prefix = key_prefix + "." + matches[1]
-                    prefix.gsub( /^\.+/, "" )
-                    
-                    Sadie::_init_primers_proc_ini_file( prefix, filepath )
-                elsif filename.match( /\.res$/ ) || filename.match( /\.res.rb$/ )
-                    Sadie::_init_primers_proc_res_file( filepath )
-                end
+                initializePrimerFile( key_prefix, filepath )
             end
         end
     end
     
-    def self._init_primers_proc_ini_file( key_prefix, filepath )
-        inifile = Ini.new( filepath )
-        inifile.each do | section, key_from_ini_file, value |
+    def initializePrimerFile( key_prefix, filepath )
+        
+        
+        basename = File.basename( filepath )
+        if primerPluginRegistered? basename
+            setCurrentPrimerFilepath filepath
             
-            # compute key
-            key_to_set =  key_prefix + "." + section + "." + key_from_ini_file
-            key_to_set = key_to_set.gsub( /^\.+/, "" )
-            #puts "key_to_set: #{key_to_set}"
+            setCurrentPrimerKeyPrefix key_prefix
             
-            # get sadie instance and set
-            sadie_instance = Sadie::_getCurrentSadieInstance
-            sadie_instance.set( key_to_set, value )
+            basename = File.basename( filepath )
+            primeWithPlugin( key_prefix, filepath )
         end
     end
     
-    def self._init_primers_proc_res_file( filepath )
+    
+    
+    def setCurrentPrimerKeyPrefix ( prefix )
+        @@current_primer_keyprefix = prefix
+    end
+    
+    def getCurrentPrimerKeyPrefix 
+        @@current_primer_keyprefix
+    end
+    
+    def setCurrentPrimerFilepath ( filepath )
+        @@current_primer_filepath = filepath
+    end
+    
+    def getCurrentPrimerFilepath
+        @@current_primer_filepath
+    end
+    
+    
+    
+    # ==memorizePrimerLocation
+    #
+    # internal, ignore the man behind the curtain
+    def memorizePrimerLocation( filepath, primer_provides )
         
-#         puts "Loading #{filepath}..."
+        # validate primer hash
+        #primer_dirpath = @@mid_primer_toplevel_primer_dirpath
+        primer_dirpath = _get("sadie.primers_dirpath")
+        @@primer_hash.has_key?( primer_dirpath ) \
+            or @@primer_hash["#{primer_dirpath}"] = Hash.new
         
-        # load the res file
-        Sadie::_setMidPrimerInit( filepath )
-        load( filepath )
-        Sadie::_unsetMidPrimerInit
+        # interate over provides setting primer providers for each
+        primer_provides.each do | key |
+            setPrimerProvider( key, filepath )
+        end
+    end
+    
+    
+    # ==setPrimerProvider
+    #
+    # internal, ignore the man behind the curtain
+    def setPrimerProvider( primer_name, primer_filepath )
+        
+        primer_dirpath = _get( "sadie.primers_dirpath" )
+        @@primer_hash.has_key?( primer_dirpath ) \
+            or @@primer_hash[primer_dirpath] = Hash.new
+        
+        @@primer_hash["#{primer_dirpath}"]["#{primer_name}"] = primer_filepath
         
     end
+    
+    def getPrimerProvider( key )
+        
+        # fetch primers dirpath and validate the primer hash
+        primer_dirpath = _get( "sadie.primers_dirpath" )
+        @@primer_hash.has_key?( primer_dirpath ) \
+            or @@primer_hash[primer_dirpath] = Hash.new
+        
+        primers = @@primer_hash[primer_dirpath]
+        primers.has_key?( key ) \
+            or return nil             # primer not defined
+        
+        return primers[key]
+    end
+    
+    
+    
+    def _primed ( k, is_primed )
+        defined? k \
+            or raise '_primed> reqd parameter, k, was undefined'
+        k.is_a?( String ) \
+            or raise '_primed> reqd parameter, k, was non-string'
+        if ( is_primed )
+            @flag_primed[k] = true
+            return true
+        end
+        @flag_primed.has_key?( k ) \
+            or return true
+        @flag_primed.delete( k )
+    end
+
+    def _prime ( k )
+        
+        provider = getPrimerProvider( k ) \
+            or return true;
+        
+        setCurrentPrimerFilepath(provider)
+        Sadie::setCurrentSadieInstance( self )
+        load provider
+        true
+        
+    end
+    
+
+    def _newline( rval=true )
+        #puts
+        return rval
+    end
+    
+    # ==method: unset
+    # unsets the value of k.  Note that this does not unprime, so
+    # get(key) will simply return nil. Run with unprime to have the
+    # primer run again
+    def unset( key )
+        _unset( key )
+    end   
     
     def _recallExpensive( k )
         expensive_filepath              = _computeExpensiveFilepath( k )
@@ -434,27 +716,12 @@ class Sadie
         File.expand_path("session."+session_id+".exp."+k, _get( "sadie.sessions_dirpath" ) )
     end
     
-    def _primed( k, isprimed )
-        if isprimed
-            @flag_primed["#{k}"]       = true
-            return
-        end
-        @flag_primed.delete( k )
-    end
-    
     def _expensive( k, isexpensive )
         if isexpensive
             @flag_expensive["#{k}"]    = true
             return
         end
         @flag_expensive.delete( k )
-    end
-    
-    # direct access getter for shortterm memory
-    def _get( key )
-        value = @shortterm["#{key}"]
-        #puts "_get(#{key})> #{value}"
-        return value
     end
     
     # direct access setter for shortterm memory
@@ -469,9 +736,6 @@ class Sadie
             and @shortterm.delete( key )
     end
     
-    def _isset?( key )
-        return @shortterm.has_key?( key )
-    end
     
     # init given path to session file
     def _initializeWithSessionFilePath(session_filepath)
@@ -515,43 +779,49 @@ class Sadie
         return value
     end
     
-    def self._setMidPrimerInit ( filepath )
-        @@mid_primer_initialization     = true
-        @@mid_primer_filepath           = filepath
+    # ==method: checkInstanceSanity
+    #
+    # verifies that needed instance variables are defined
+    def _checkInstanceSanity
+        defined? @shortterm \
+            or @shortterm               = Hash.new
+        defined? @flag_expensive \
+            or @flag_expensive          = Hash.new
+        defined? @flag_destroyonget \
+            or @flag_destroyonget       = Hash.new
+        defined? @flag_primed \
+            or @flag_primed             = Hash.new
+        
     end
     
-    def self._unsetMidPrimerInit
-        @@mid_primer_initialization     = false
-    end
-    
-    def self._midPrimerInit?
-        @@mid_primer_initialization
-    end
-    
-    def self._memorizePrimerLocation( filepath, primer_provides )
-        primer_dirpath = @@mid_primer_toplevel_primer_dirpath
-        @@primer_hash.has_key?( primer_dirpath ) \
-            or @@primer_hash["#{primer_dirpath}"] = Hash.new
-        primer_provides.each do | key |
-            Sadie::_setPrimerProvider( key, filepath )
+    # ==method: checkClassSanity
+    #
+    # verifies that needed class variables are defined
+    def _checkClassSanity
+        defined? @@flag_primed \
+                or @@flag_primed        = Hash.new
+        
+        # init primer plugin vars
+        if ( ! defined? @@primer_plugin_lookup )
+            @@mid_plugin_initialization     = false
+            @@primer_plugin_lookup          = Array.new
+            @@primer_plugins_initialized    = false
         end
-    end
-    
-    def self._setMidPrimerTopLevelPrimersDirpath( dirpath )
-        @@mid_primer_toplevel_primer_dirpath = dirpath
-    end
-    
-    def self._setPrimerProvider( primer_name, primer_filepath )
-        primer_dirpath = @@mid_primer_toplevel_primer_dirpath
-        @@primer_hash["#{primer_dirpath}"]["#{primer_name}"] = primer_filepath
-    end
-    
-    def self._checkSanity
-        if ! defined? @@primer_hash
-            @@primer_hash               = Hash.new
+        
+        # init primer vars
+        defined? @@primer_hash \
+            or @@primer_hash            = Hash.new
+         defined? @flag_primed \
+            or @flag_primed             = Hash.new
+        if ! defined? @@mid_primer_initialization
+            @@mid_primer_initialization = false
+            @@mid_primer_filepath       = nil
+#             @@mid_primer_toplevel_primer_dirpath = nil
         end
         
     end
+    
+    
 end
 
 require "sadie/version"
