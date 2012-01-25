@@ -40,7 +40,7 @@ Sadie::registerPrimerPlugin( {  "match" => /\.dbi\.conx$/,
                 # determine key
                 #sadie_key = key_prefix+'.'+File.basename( primer_file_filepath )
                 
-                puts "installing db connection: #{sadie_key}"
+#                 puts "installing db connection: #{sadie_key}"
                 
                 sadie.set( sadie_key, dbh )
                 

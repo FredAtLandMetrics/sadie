@@ -1,5 +1,3 @@
-# WARNING: THIS DOESN'T WORK YET!!!
-
 Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
                                "accepts-block" => false,
                                "prime-on-init" => false } ) do |sadie, key_prefix, primer_file_filepath|
@@ -11,20 +9,23 @@ Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
     
         if ( matches = primer_file_basename.match( /^(.*)\.([^\.]+)\.sql$/ ) )
             dbi_sadie_key = key_prefix + '.' + matches[2] + ".dbi.conx"
-            puts "dbi_sadie_key: #{dbi_sadie_key}, connecting..."
+#             puts "dbi_sadie_key: #{dbi_sadie_key}, connecting..."
             dbconx = sadie.get( dbi_sadie_key )
-            puts "dbconx: #{dbconx}"
+#             puts "dbconx: #{dbconx}"
             if ( dbconx = sadie.get( dbi_sadie_key ) )
-                puts "  connected."
+#                 puts "  connected."
                 if sql_query = Sadie::templatedFileToString( primer_file_filepath )
                     
                     sth = dbconx.prepare(sql_query)
                     sth.execute
                     
+                    result = Array.new
+                    while row = sth.fetch
+                        result.push row.to_a
+                    end
                     
                     
-                    
-                    sadie.setExpensive( sadie_key, sth.fetch_array )
+                    sadie.setExpensive( sadie_key, result )
                     
                     # Close the statement handle when done
                     sth.finish

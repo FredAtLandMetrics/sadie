@@ -1,0 +1,9 @@
+These tests depend on a mysql database created as follows on the local machine:
+
+create database test
+grant all on test.* to test@localhost identified by 'test'
+CREATE TABLE `test` (
+  `col1` int(8) DEFAULT NULL,
+  `col2` varchar(256) DEFAULT NULL
+)
+INSERT INTO `test` VALUES (1,'testing123'),(2,'testing456');

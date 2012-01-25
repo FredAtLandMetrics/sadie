@@ -26,7 +26,7 @@ class TestSadieToplevel < Test::Unit::TestCase
             dog1a = sadie.get( "toplevel_destructonget.oneprime" )
             dog2a = sadie.get( "toplevel_destructonget.twoprime" )
             dog2b = sadie.get( "toplevel_destructonget.twoprime" )
-            sleep( 2 )
+            sleep( 0.01 )
             dog1b = sadie.get( "toplevel_destructonget.oneprime" )
             assert_equal( dog2a, dog2b )
             assert_not_equal( dog1a, dog1b )

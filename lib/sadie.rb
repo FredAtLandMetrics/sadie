@@ -373,7 +373,7 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
-        puts "setCheap( #{k}, #{v} )"
+#         puts "setCheap( #{k}, #{v} )"
         
         # set it, mark not expensive and primed
         _set( k, v )
@@ -402,7 +402,7 @@ class Sadie
     # the expensive setter.  key, value pairs stored via this method are not kept in memory
     # but are stored to file and recalled as needed
     def setExpensive(k,v)
-        puts "setting expensive, key: #{k}"
+#         puts "setting expensive, key: #{k}"
         expensive_filepath              = _computeExpensiveFilepath( k )
         serialized_value                = Marshal::dump( v )
         File.open(expensive_filepath, 'w') { |f|
@@ -554,6 +554,7 @@ class Sadie
             load( filepath )
             unsetMidPluginInit
         end
+        puts "...finished initializing primer plugins"
         @@primer_plugins_initialized = true
     end
     
@@ -762,7 +763,7 @@ class Sadie
             setCurrentPrimerKeyPrefix( key_prefix )
             Sadie::setCurrentSadieInstance( self )
             
-            puts "_prime( #{k} ) loading #{provider}"
+#             puts "_prime( #{k} ) loading #{provider}"
             
             load plugin_filepath
         end
