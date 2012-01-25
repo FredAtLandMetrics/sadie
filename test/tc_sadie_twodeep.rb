@@ -26,7 +26,7 @@ class TestSadieTwoDeep < Test::Unit::TestCase
             assert_not_nil( dbconx )
             
             # test sql22darray
-            tablearray = sadie.get( "two.deep.testquery.test.sql" )
+            tablearray = sadie.get( "two.deep.testquery.test.sql2ar" )
             assert_not_nil( tablearray )
             assert_equal( tablearray[0][0], 1 )
             assert_equal( tablearray[1][1], "testing456" )

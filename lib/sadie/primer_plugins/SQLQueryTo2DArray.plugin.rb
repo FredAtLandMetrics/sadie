@@ -1,4 +1,4 @@
-Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
+Sadie::registerPrimerPlugin( { "match" => /\.sql2ar$/,
                                "accepts-block" => false,
                                "prime-on-init" => false } ) do |sadie, key_prefix, primer_file_filepath|
     primer_file_basename = File.basename( primer_file_filepath )
@@ -7,7 +7,7 @@ Sadie::registerPrimerPlugin( { "match" => /\.sql$/,
     
     Sadie::prime( { "provides" => [ sadie_key ] }) do |sadie|
     
-        if ( matches = primer_file_basename.match( /^(.*)\.([^\.]+)\.sql$/ ) )
+        if ( matches = primer_file_basename.match( /^(.*)\.([^\.]+)\.sql2ar$/ ) )
             dbi_sadie_key = key_prefix + '.' + matches[2] + ".dbi.conx"
 #             puts "dbi_sadie_key: #{dbi_sadie_key}, connecting..."
             dbconx = sadie.get( dbi_sadie_key )

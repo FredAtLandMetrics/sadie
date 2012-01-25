@@ -1,17 +1,19 @@
-==About
+==About Sadie
 
-Sadie is a data framework intended to ease the pain of constructing, accessing, and managing the resources required by large stores of inter-related data. It supports sessions, lazy on-demand, one-time evaluation and file-based storage/retrieval operations for resource-heavy data.
+Sadie is a general-purpose data server written in Ruby and it's intended to be used by a Rubie developer to simplify access to inter-related data sets.
 
-It can be downloaded via its rubygems page
+It is designed to provide handle-based access to data of all types, much like a simple hash.  Unlike a hash, a sadie instance is created with a pathname which points to a directory of primers which tell sadie how to determine what the value of a given hash key should be, but values are not assigned until the hash keys are requested.  In this way, only necessary data transformations and/or accesses are performed.
 
-  https://rubygems.org/gems/sadie
+Valid primers currently are:
 
-or from github:
+  .ini - provide access to section, key, value data in ini-style-files
+  .dbi.conx - simple access to database handles
+  .sql2ar - simple access to database data
+  .res, .res.rb - provides access to general-purpose, programatic manipulation of data (i.e. just use sadie instance for input and output of data)
+  .tmpl - simple templating engine for text-based file types
 
-  https://github.com/FredAtLandMetrics/sadie
-  
-==Summary
+It's very simple to add new primer types, so it would be simple to create primers for html, xml, csv, xls, pointers to all of the above on remote machines, or any- and everything else.
 
-Sadie exists to de-couple the assembling of large, related datasets from the rest of an application so that intelligent, manual optimizations become more apparent.  A common usage would be to query an entire table, then, as the single query is iterated on, perform multiple, simultaneous calculations on the dataset where, in other situations, the calculations might have required multiple similar queries to the database.
+At Landmetrics, we use a predecessor to Sadie to power perimetercomps[http://perimetercomps.com], producing each 50+ page report with charts, graphs and tables with only 12 queries to the database.
 
-In LandMetrics' perimetercomps ( http://perimetercomps.com ), a similar framework was developed such that, given just a few initial parameters, all of the information for the 50+ page report was assembled with only 12 queries and a myriad of graphs, charts and tables are constructed from the single optimized data storage mechanism.
+Sadie can be downloaded via its rubygems page[https://rubygems.org/gems/sadie] or from github[https://github.com/FredAtLandMetrics/sadie].

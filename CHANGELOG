@@ -1,3 +1,6 @@
 [Up to v0.0.7] getting it all working
 
 [0.0.8] abstracted primer types such that sadie can now use plugins.  with two working plugins, IniFile and Resource, it is functionaly equivalent to v0.0.7.  More to come.
+[0.0.9] primer logic bugfix, added sql and db connection primer types
+[0.0.10] sql plugin handler became sql2ar to better reflect what's going on
+[0.0.11] updated documentation
