@@ -1,0 +1,4 @@
+[connection]
+dbistr = DBI:Mysql:test:127.0.0.1
+user = test
+pass = test

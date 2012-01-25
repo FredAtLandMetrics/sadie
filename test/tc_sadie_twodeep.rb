@@ -20,6 +20,12 @@ class TestSadieTwoDeep < Test::Unit::TestCase
             
             # test two-deep expensive
             assert_equal( sadie.get( "expensive.oneprime" ), "primedit" )
+            
+            # test db connection
+            dbconx = sadie.get( "two.deep.test.dbi.conx" )
+            puts "dbconx(test): #{dbconx}"
+            assert_not_nil( dbconx )
+            assert_not_nil( sadie.get( "two.deep.testquery.test.sql" ) )
         end
     end
 end

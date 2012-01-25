@@ -1,4 +1,8 @@
-$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
+#$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
+#$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
+#$:.unshift(File.expand_path('./lib', ENV['rvm_path']))
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+$:.unshift ENV["GEM_HOME"]
 
 require "test/unit"
 require "sadie"
