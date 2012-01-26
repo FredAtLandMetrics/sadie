@@ -1,0 +1,21 @@
+[setDestroyTimer]  this will accept either a quantity of time or a specific date and
+                   will destroy the data at that time, causing a "reprime" event
+                   
+[threadedness]     split getSadieInstance(sessionid] into getSadieInstanceSlave[sessionid]
+                   where getSadieInstance will continute to bring up a normal Sadie
+                   instance and getSadieInstanceSlave will perform reads in its own thread
+                   but will prime in sync with the main instance thread (such that two
+                   primers for the same key would never execute at the same time, rather,
+                   the second one would simply block until the first completed).  This
+                   would allow for some concurrency within a session without.  Rather than
+                   calling getSadieInstanceSlave directly, a prgram could simple call a
+                   new method, consider( key ) which would fire off a get in an instance
+                   slave to allow for some background processing
+                   
+[keyregexpmatch]   instead of requiring that all keys must be known either as having been set
+                   or having a known primer, a key could be matched against a regex.
+                   This would make it possible to encode some useful priming information
+                   in the key itself, enough that the primer could use it and divine the
+                   desired result.  So, where Sadie::prime takes an arg of containing
+                   a list of keys that this primer "provides", it will alternatively take an
+                   arg of "key-match" which will fire off the primer when the key matches.

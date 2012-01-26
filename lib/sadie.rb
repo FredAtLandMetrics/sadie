@@ -162,20 +162,6 @@ class Sadie
             set( "sadie.session_id", _generateNewSessionId )
         end
         
-#         if  defined? options["sadie.session_filepath"] \
-#             && options["sadie.session_filepath"].match(/^[^\s]+$/)
-#             set( "sadie.session_filepath", options["sadie.session_filepath"] )
-#             _initializeWithSessionFilePath( get("sadie.session_filepath") )
-#             return
-#         end
-#         
-#         # determine session id, init from session if provided as arg
-#         if defined?options["sadie.session_id"] && options["sadie.session_id"].match(/^[^\s]+$/)
-#             set( "sadie.session_id", options["sadie.session_id"] )
-#             _initializeWithSessionId( get( "sadie.session_id" ) )
-#         else
-#             set( "sadie.session_id", _generateNewSessionId )
-#         end
         
     end
     
@@ -236,61 +222,10 @@ class Sadie
         # a primer or actually priming
         else
             yield( self, getCurrentPrimerKeyPrefix, @@current_primer_filepath ) \
-#                unless midPrimerInit?
-            # if registering the prime mode, skips block exec
-#            
-#             if currentPrimerPluginAcceptsBlock?
-#                 
-#                 # call with block only if accepts block
-#                 yield( self, getCurrentPrimerKeyPrefix, @@current_primer_filepath, &block )
-#                 
-#             else
-                
-#             yield( self, getCurrentPrimerKeyPrefix, @@current_primer_filepath ) \
-#                 if prime_on_init or 
-                
-#             end
-            
-#             prime_on_init \
-#                 or unsetMidPrimerInit
-            
         end
     end
     
     
-    
-#     # ==method: pathToKey
-#     #
-#     # returns a dot-separated version of the filepath such that
-#     #   with parentify=1 returns dot path to directory file is in,
-#     #   with parentify=2 returns dot path to directory above directory file is in, etc.
-#     def pathToKey( filepath, parentify=0 )
-#         
-#         # separate path into basename,dirname
-#         path_basename = File.basename( filepath )
-#         path_dirname = File.dirname( filepath )
-#         
-#         # create stack of dir components
-#         path_stack = Array.new
-#         temp_path_stack = path_dirname.split(/\//)
-#         temp_path_stack.each do |item|
-#             next if item.match(/^\s*$/)
-#             path_stack.push item
-#         end
-#         
-#         # lose the suffix on the basename
-#         root_path_basename = path_basename.gsub( /\.[^\.]*$/, "" )
-#         path_stack.push( root_path_basename )
-#         if parentify > 1
-#             parentify.times do |i|
-#                 path_stack.pop
-#             end
-#         end
-#         
-#         path_stack.join( "," )
-#         
-#     end
-
     
     # ==method: get
     #
@@ -355,11 +290,12 @@ class Sadie
     #
     # returns true if the destructOnGet flag is set for the key
     def destroyOnGet?( key )
-        @flag_destroyonget.has_key?( key ) \
-            or return _newline( false )
-        @flag_destroyonget["#{key}"] \
-            and return _newline( true )
-        return _newline(false)
+        ( @flag_destroyonget.has_key?( key ) && @flag_destroyonget["#{key}"] )
+#         @flag_destroyonget.has_key?( key ) \
+#             or return _newline( false )
+#         @flag_destroyonget["#{key}"] \
+#             and return _newline( true )
+#         return _newline(false)
     end
     
     # ==method: set
@@ -648,8 +584,6 @@ class Sadie
            
            if regexp.match( filename )
                
-#                currentPrimerPluginAcceptsBlock( accepts_block )
-#                currentPrimerPluginPrimeOnInit( prime_on_init )
                setCurrentPrimerPluginFilepath( plugin_filepath )
                prime_on_init \
                     or setMidPrimerInit( filepath )
@@ -691,7 +625,13 @@ class Sadie
         @@current_primer_filepath
     end
     
+    def setCurrentPrimerRequestingKey( key )
+        @@current_primer_requesting_key = key
+    end
     
+    def getCurrentPrimerRequestingKey
+        @@current_primer_requesting_key
+    end
     
     # ==memorizePrimerLocation
     #
@@ -772,7 +712,6 @@ class Sadie
     
 
     def _newline( rval=true )
-        #puts
         return rval
     end
     
@@ -907,7 +846,6 @@ class Sadie
         if ! defined? @@mid_primer_initialization
             @@mid_primer_initialization = false
             @@mid_primer_filepath       = nil
-#             @@mid_primer_toplevel_primer_dirpath = nil
         end
         
     end

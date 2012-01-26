@@ -17,3 +17,16 @@ It's very simple to add new primer types, so it would be simple to create primer
 At Landmetrics, we use a predecessor to Sadie to power perimetercomps[http://perimetercomps.com], producing each 50+ page report with charts, graphs and tables with only 12 queries to the database.
 
 Sadie can be downloaded via its rubygems page[https://rubygems.org/gems/sadie] or from github[https://github.com/FredAtLandMetrics/sadie].
+
+USE CASES
+
+[templating]    As noted above, perimetercomps[http://perimetercomps.com] is an example of how one might
+                use sadie to to create a templating engine wherein many pieces of related information
+                from many different sources are made into charts, graphs, tables and text before being
+                assembled into a single deliverable document.  We used LaTeX, but html, xml, css, txt, etc.
+                would be just as easy.
+
+[data import]   Tasks involving grabbing data from different places in different formats and
+                massaging the data into a consistent and useful format.  A few simple primer plugins
+                would make this very easy.
+                
