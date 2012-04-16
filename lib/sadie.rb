@@ -146,12 +146,13 @@ class Sadie
         # iterate over constructor args, but do primers_dirpath last since it
         # causes a call to initializePrimers
         options.each do |key, value|
-            if ( key.eql? "sadie.primers_dirpath")
+            if key.eql? "sadie.primers_dirpath"
                 delay_set_primers_dirpath = value
             else
                 set( key, value )
             end
         end
+        
         defined? delay_set_primers_dirpath \
             and set( "sadie.primers_dirpath", delay_set_primers_dirpath )
         
@@ -337,7 +338,21 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
-#         puts "setCheap( #{k}, #{v} )"
+         puts "setCheap( #{k}, #{v} )"
+
+        if  k.eql? "sadie.primer_plugins_dirpath" 
+            puts "adding primer plugins dirpath via setCheap"
+            if v.respond_to? "each"
+                v.each do |plugindir|
+                    addPrimerPluginsDirPath plugindir
+                end
+            else
+                addPrimerPluginsDirPath v
+            end
+            v = @plugins_dir_paths
+        end
+        
+        
         
         # set it, mark not expensive and primed
         _set( k, v )
@@ -501,7 +516,7 @@ class Sadie
     # called by initializePrimers so it's not necessary to call this separate from that
     def initializePrimerPlugins
         
-        plugins_dirpath = get( "sadie.primer_plugins_dirpath" ) \
+        defined? @plugins_dir_paths \
             or raise 'sadie.primer_plugins_dirpath not set'
         
         puts "Initializing primer plugins..."
@@ -778,9 +793,9 @@ class Sadie
     
     # direct access setter for shortterm memory
     def _set( key, value )
-        
 #        puts "_set> key: #{key}, value: #{value}"
-        @shortterm["#{key}"]           = value
+            @shortterm["#{key}"]           = value
+       # end
     end
     
     def _unset( key )
