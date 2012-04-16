@@ -3,9 +3,15 @@
 # the sadie constructor
 
 class Sadie
+    
+  ppdp = File.join("lib/sadie/primer_plugins",File.join("gems/sadie-#{Sadie::VERSION}",ENV['GEM_HOME']))
+  if ! File.exists? ppdp
+      ppdp = "lib/sadie/primer_plugins"
+  end
+  
   DEFAULTS = {
     "sadie.primers_dirpath" => File.expand_path("primers","/var/sadie"),
     "sadie.sessions_dirpath" => File.expand_path("sessions","/var/sadie"),
-    "sadie.primer_plugins_dirpath" => "lib/sadie/primer_plugins"
+    "sadie.primer_plugins_dirpath" => ppdp
   }
 end
