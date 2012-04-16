@@ -1,15 +1,17 @@
 require "bundler/gem_tasks"
 
 require 'rake'
-require 'rake/rdoctask'
+require 'rdoc/task'
 
 task    :default    =>  [:test]
 
+# run sadie tests
 task :test do
     ruby "test/tc_sadie_toplevel.rb"
     ruby "test/tc_sadie_twodeep.rb"
 end
 
+# increment version
 task :deploy => 'inc_version' do
     version = current_sadie_version
     sh "git push"
@@ -17,6 +19,7 @@ task :deploy => 'inc_version' do
     sh "gem push sadie-#{version}.gem"
 end
 
+# increment version
 task :inc_version do
     version = current_sadie_version
     if (matches = version.match(/^(\d+\.\d+\.)(\d+)$/))

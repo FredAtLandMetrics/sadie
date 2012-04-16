@@ -5,3 +5,6 @@
 [0.0.10] sql plugin handler became sql2ar to better reflect what's going on
 [0.0.11] updated documentation
 [0.0.12] updated documentation, Rakefile, code cleanups
+[0.0.13] Minor API fixes to prep for Olsen
+[0.0.14] updated documentation
+

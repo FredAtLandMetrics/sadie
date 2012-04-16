@@ -19,3 +19,13 @@
                    desired result.  So, where Sadie::prime takes an arg of containing
                    a list of keys that this primer "provides", it will alternatively take an
                    arg of "key-match" which will fire off the primer when the key matches.
+                   
+[sampleapps]       make a few simple apps with primer directories 
+
+[primer_path]      currently defined via a path to a single directory, the toplevel primer
+                   directory idea should be made into a collection of directories as spec'ed
+                   in a colon-separated list, and it should check the environment, if
+                   otherwise undefined.  would make it easy to have multiple primer
+                   repositories.
+                   
+                   

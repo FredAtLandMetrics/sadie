@@ -69,7 +69,7 @@ class Sadie
     
     # ==method: Sadie::iniFileToHash
     #
-    # utility class method.  accepts a filepath.  digests inin file and returns hash of hashes.
+    # utility class method.  accepts a filepath.  digests ini file and returns hash of hashes.
     #
     def self.iniFileToHash ( filepath )
         section = nil
@@ -130,7 +130,11 @@ class Sadie
         
         # internalize defaults to shortterm
         DEFAULTS.each do |key, value|
-            _set( key, value )
+            if key.eql? "sadie.primer_plugins_dirpath"
+                addPrimerPluginsDirPath value 
+            else
+                _set( key, value )
+            end
         end
         
         # internalize supplied defaults, postponing a set of sadie.primers_dirpath
@@ -165,7 +169,24 @@ class Sadie
         
     end
     
-    def prime ( primer_definition, &block )
+    def addPrimerPluginsDirPath( path )
+        
+        exppath = File.expand_path(path)
+        
+        # add the path to the system load path
+        $LOAD_PATH.include?(exppath) \
+            or $LOAD_PATH.unshift(exppath)
+            
+        # add the path to the pluginsdir array
+        defined? @plugins_dir_paths \
+            or @plugins_dir_paths = Array.new        
+        @plugins_dir_paths.include?(exppath) \
+            or @plugins_dir_paths.unshift(exppath)
+    end
+    
+   
+    
+    def prime( primer_definition, &block )
         # validate params
         defined? primer_definition \
             or raise "Prime called without parameters"
@@ -254,6 +275,13 @@ class Sadie
             return return_value
         end
         
+    end
+    
+    # ==method: output
+    #
+    # an alias for get.  intended for use with primers that produce an output beyond their return value
+    def output( k )
+        return get( k )
     end
     
     # ==method: isset?
@@ -479,16 +507,18 @@ class Sadie
         puts "Initializing primer plugins..."
         
         # load the plugins
-        Dir.foreach( plugins_dirpath ) do |filename|
-            next if ! filename.match( /\.plugin\.rb$/ )
-            
-            filepath = File.expand_path( filename, plugins_dirpath )
-            
-            puts "initializing primer plugin with file: #{filename}"
-            
-            setMidPluginInit( filepath )
-            load( filepath )
-            unsetMidPluginInit
+        @plugins_dir_paths.each do | dirpath |
+            Dir.foreach( dirpath ) do |filename|
+                next if ! filename.match( /\.plugin\.rb$/ )
+                
+                filepath = File.expand_path( filename, dirpath )
+                
+                puts "initializing primer plugin with file: #{filename}"
+                
+                setMidPluginInit( filepath )
+                load( filename )
+                unsetMidPluginInit
+            end
         end
         puts "...finished initializing primer plugins"
         @@primer_plugins_initialized = true
