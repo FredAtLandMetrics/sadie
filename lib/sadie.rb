@@ -3,7 +3,7 @@ require 'rubygems'
 require "bundler/setup"
 require 'bundler'
 Bundler.require(:default)
-require 'lib/sadie/defaults'
+require 'sadie/defaults'
 require 'erb'
 
 # ==Description: Sadie
