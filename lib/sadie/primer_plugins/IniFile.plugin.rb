@@ -1,3 +1,4 @@
+require 'pp'
 Sadie::registerPrimerPlugin( {  "match" => /\.ini$/,
                                 "accepts-block" => false,
                                 "prime-on-init" => true } ) do |sadie, key_prefix, primer_file_filepath|
@@ -9,6 +10,7 @@ Sadie::registerPrimerPlugin( {  "match" => /\.ini$/,
     
     if inihash = Sadie::iniFileToHash( primer_file_filepath )
         puts "got hash"
+        pp inihash
         inihash.each do |section, section_hash|
             puts "got at least one section"
             section_hash.each do |key, value|
