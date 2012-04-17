@@ -5,7 +5,8 @@ require 'sadie/version'
 
 class Sadie
     
-  ppdp = File.join("lib/sadie/primer_plugins",File.join("gems/sadie-#{Sadie::VERSION}",ENV['GEM_HOME']))
+  #ppdp = File.join("lib/sadie/primer_plugins",File.join("gems/sadie-#{Sadie::VERSION}",ENV['GEM_HOME']))
+  ppdp = File.join(ENV['GEM_HOME'],"gems/sadie-#{Sadie::VERSION}","lib/sadie/primer_plugins")
   puts "ppdf: #{ppdp}"
   if ! File.exists? ppdp
       ppdp = "lib/sadie/primer_plugins"
