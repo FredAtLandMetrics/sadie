@@ -129,6 +129,8 @@ class Sadie
         _checkInstanceSanity        
         _checkClassSanity
         
+        Sadie::setCurrentSadieInstance( self )
+        
         # internalize defaults to shortterm
         DEFAULTS.each do |key, value|
             if key.eql? "sadie.primer_plugins_dirpath"
@@ -367,9 +369,9 @@ class Sadie
        _primed( k, true )
         
         # if we've reset the primers dirpath, init the primers
-        if k.eql?( "sadie.primers_dirpath" )
-            Sadie::setCurrentSadieInstance( self )
-        end
+        #if k.eql?( "sadie.primers_dirpath" )
+        #    Sadie::setCurrentSadieInstance( self )
+        #end
         
     end
     
