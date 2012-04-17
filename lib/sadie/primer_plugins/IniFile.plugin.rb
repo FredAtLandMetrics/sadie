@@ -9,12 +9,12 @@ Sadie::registerPrimerPlugin( {  "match" => /\.ini$/,
     ini_file_root = ini_file_basename.gsub( /\.ini$/, "" )
     
     if inihash = Sadie::iniFileToHash( primer_file_filepath )
-        puts "got hash"
+#         puts "got hash"
         pp inihash
         inihash.each do |section, section_hash|
-            puts "got at least one section"
+#             puts "got at least one section"
             section_hash.each do |key, value|
-                puts "got at least one key"
+#                 puts "got at least one key"
                 key_to_set =  key_prefix + "." + ini_file_root + "." + section + "." + key
                 key_to_set = key_to_set.gsub(/^\./,"")
                 sadie.set( key_to_set, value )
