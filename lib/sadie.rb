@@ -341,7 +341,7 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
-         puts "setCheap( #{k}, #{v} )"
+#          puts "setCheap( #{k}, #{v} )"
 
         if  k.eql? "sadie.primer_plugins_dirpath" 
             puts "adding primer plugins dirpath via setCheap"
