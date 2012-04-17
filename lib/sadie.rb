@@ -81,7 +81,7 @@ class Sadie
                 if matches = line.match(/\[([^\]]+)\]/)
                     section = matches[1]
                     ret[section] = Hash.new
-                elsif matches = line.match(/^\s*([^\s\=]+)\s*\=\s*([^\s]+)\s*$/)
+                elsif matches = line.match(/^\s*([^\s\=]+)\s*\=\s*([^\s]+.*)\s*$/)
                     key = matches[1]
                     value = matches[2]
                     
