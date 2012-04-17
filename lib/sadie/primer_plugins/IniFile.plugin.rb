@@ -2,6 +2,8 @@ Sadie::registerPrimerPlugin( {  "match" => /\.ini$/,
                                 "accepts-block" => false,
                                 "prime-on-init" => true } ) do |sadie, key_prefix, primer_file_filepath|
     
+    puts "processing ini file: primer_file_filepath"
+    
     ini_file_basename = File.basename primer_file_filepath
     ini_file_root = ini_file_basename.gsub( /\.ini$/, "" )
     
