@@ -1,6 +1,7 @@
 # ==Notes
 # this file sets defaults which can and should be overridden using arguments
 # the sadie constructor
+require 'sadie/version'
 
 class Sadie
     
