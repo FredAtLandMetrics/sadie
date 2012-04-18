@@ -14,6 +14,7 @@ class TestSadieToplevel < Test::Unit::TestCase
             sadie = Sadie::getSadieInstance( {  "sadie.primers_dirpath" => "test/test_primers",
                                                 "sadie.sessions_dirpath" => dir,
                                                 "sadie.primer_plugins_dirpath" => "lib/sadie/primer_plugins" } )
+            sadie.initializePrimers
             
             # test top-level ini
             assert_equal( sadie.get( "toplevel.somegroup.somekey"       ), "someval"    )

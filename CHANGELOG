@@ -10,4 +10,4 @@
 [0.0.15] actually committed changes to code this time...doh
 [0.0.16] bugfixes, updated tests
 [0.0.17] bugfixes, updated tests
-
+[0.0.18] initializePrimers is no longer called by constructor...must now call manually before using get method

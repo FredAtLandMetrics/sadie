@@ -10,6 +10,7 @@ class TestSadieTwoDeep < Test::Unit::TestCase
             sadie = Sadie::getSadieInstance( {  "sadie.primers_dirpath" => "test/test_primers",
                                                 "sadie.sessions_dirpath" => dir,
                                                 "sadie.primer_plugins_dirpath" => "lib/sadie/primer_plugins" } )
+            sadie.initializePrimers
             
             # test two-deep ini
             assert_equal( sadie.get( "two.deep.conf.section.thiskey" ), "thisval" )

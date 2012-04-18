@@ -12,10 +12,9 @@ require 'erb'
 # sessions, lazy, on-demand, one-time evaluation and file-based storage/retrieval
 # operations for resource-heavy data.
 # 
-# For simplicity, it supports simple, ini-style data
-# initialization, but for efficient optimization of resource-intensive computations, it
-# supports on-demand, one-time evaluation of &quot;primers&quot; which may define, or prime,
-# multiple key, value pairs in a single run.
+# New types of data primers can be added by calling addPrimerPluginsDirPath with a
+# directory containing plugin definitions
+#
 
 def S( key )
     instance = Sadie::getCurrentSadieInstance
@@ -133,31 +132,31 @@ class Sadie
         
         # internalize defaults to shortterm
         DEFAULTS.each do |key, value|
-            if key.eql? "sadie.primer_plugins_dirpath"
-                addPrimerPluginsDirPath value 
-            else
+#             if key.eql? "sadie.primer_plugins_dirpath"
+#                 addPrimerPluginsDirPath value 
+#             else
                 _set( key, value )
-            end
+#             end
         end
         
         # internalize supplied defaults, postponing a set of sadie.primers_dirpath
         # until the end if one is supplied.  The reason for this is that the setter
         # attempts to read the plugins and if the primer plugin dirpath has not
         # yet been set, then it'll choke if it processes the wrong one first
-        delay_set_primers_dirpath = nil
+#         delay_set_primers_dirpath = nil
       
         # iterate over constructor args, but do primers_dirpath last since it
         # causes a call to initializePrimers
         options.each do |key, value|
-            if key.eql? "sadie.primers_dirpath"
-                delay_set_primers_dirpath = value
-            else
+#             if key.eql? "sadie.primers_dirpath"
+#                 delay_set_primers_dirpath = value
+#             else
                 set( key, value )
-            end
+#             end
         end
         
-        defined? delay_set_primers_dirpath \
-            and set( "sadie.primers_dirpath", delay_set_primers_dirpath )
+#         defined? delay_set_primers_dirpath \
+#             and set( "sadie.primers_dirpath", delay_set_primers_dirpath )
         
         # if a path to a session is given, init using session file
         if options.has_key?( "sadie.session_filepath" )
@@ -170,6 +169,16 @@ class Sadie
             set( "sadie.session_id", _generateNewSessionId )
         end
         
+        # add the default sadie plugins dir
+        plugins_dirpath = File.join(
+            ENV['GEM_HOME'],
+            "gems/sadie-#{Sadie::VERSION}",
+            "lib/sadie/primer_plugins"
+        )
+        if ! File.exists? plugins_dirpath   # for dev
+            plugins_dirpath = "lib/sadie/primer_plugins"
+        end        
+        addPrimerPluginsDirPath plugins_dirpath
         
     end
     
@@ -186,6 +195,8 @@ class Sadie
             or @plugins_dir_paths = Array.new        
         @plugins_dir_paths.include?(exppath) \
             or @plugins_dir_paths.unshift(exppath)
+        
+        @@primer_plugins_initialized = nil
     end
     
    
@@ -343,17 +354,17 @@ class Sadie
         
 #          puts "setCheap( #{k}, #{v} )"
 
-        if  k.eql? "sadie.primer_plugins_dirpath" 
-            puts "adding primer plugins dirpath via setCheap"
-            if v.respond_to? "each"
-                v.each do |plugindir|
-                    addPrimerPluginsDirPath plugindir
-                end
-            else
-                addPrimerPluginsDirPath v
-            end
-            v = @plugins_dir_paths
-        end
+#         if  k.eql? "sadie.primer_plugins_dirpath" 
+#             puts "adding primer plugins dirpath via setCheap"
+#             if v.respond_to? "each"
+#                 v.each do |plugindir|
+#                     addPrimerPluginsDirPath plugindir
+#                 end
+#             else
+#                 addPrimerPluginsDirPath v
+#             end
+#             v = @plugins_dir_paths
+#         end
         
         
         
@@ -362,9 +373,9 @@ class Sadie
         _expensive( k, false )
         
         # if we've reset the primers dirpath, init the primers
-        if k.eql?( "sadie.primers_dirpath" )
-            initializePrimers
-        end
+#         if k.eql?( "sadie.primers_dirpath" )
+#             initializePrimers
+#         end
         
        _primed( k, true )
         
@@ -431,6 +442,27 @@ class Sadie
         }
         
         _initializeWithSessionId( get( "sadie.session_id" ) )
+    end
+    
+    def initializePrimers
+        
+        Sadie::setCurrentSadieInstance( self )
+        
+        # make sure primer plugins have been initialized
+        primerPluginsInitialized? \
+            or initializePrimerPlugins
+        
+        
+        primers_dirpath = get( "sadie.primers_dirpath" ) \
+            or raise "sadie.primers_dirpath not set"
+
+        return true if primersInitialized? primers_dirpath
+
+        puts "Initializing primers..."
+        initializePrimerDirectory( "", primers_dirpath )
+        puts "...finished initializing primers."
+        
+        @@flag_primed[primers_dirpath] = true
     end
     
 
@@ -520,7 +552,7 @@ class Sadie
     def initializePrimerPlugins
         
         defined? @plugins_dir_paths \
-            or raise 'sadie.primer_plugins_dirpath not set'
+            or raise 'plugins_dir_paths not set'
         
         puts "Initializing primer plugins..."
         
@@ -563,27 +595,6 @@ class Sadie
         @@flag_primed.has_key?( toplevel_dirpath ) \
             or return false;
         return @@flag_primed[toplevel_dirpath]
-    end
-    
-    def initializePrimers
-        
-        Sadie::setCurrentSadieInstance( self )
-        
-        # make sure primer plugins have been initialized
-        primerPluginsInitialized? \
-            or initializePrimerPlugins
-        
-        
-        primers_dirpath = get( "sadie.primers_dirpath" ) \
-            or raise "sadie.primers_dirpath not set"
-
-        return true if primersInitialized? primers_dirpath
-
-        puts "Initializing primers..."
-        initializePrimerDirectory( "", primers_dirpath )
-        puts "...finished initializing primers."
-        
-        @@flag_primed[primers_dirpath] = true
     end
     
     def initializePrimerDirectory( key_prefix, current_dirpath )
