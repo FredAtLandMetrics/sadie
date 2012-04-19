@@ -132,32 +132,15 @@ class Sadie
         
         # internalize defaults to shortterm
         DEFAULTS.each do |key, value|
-#             if key.eql? "sadie.primer_plugins_dirpath"
-#                 addPrimerPluginsDirPath value 
-#             else
                 _set( key, value )
-#             end
         end
         
-        # internalize supplied defaults, postponing a set of sadie.primers_dirpath
-        # until the end if one is supplied.  The reason for this is that the setter
-        # attempts to read the plugins and if the primer plugin dirpath has not
-        # yet been set, then it'll choke if it processes the wrong one first
-#         delay_set_primers_dirpath = nil
-      
         # iterate over constructor args, but do primers_dirpath last since it
         # causes a call to initializePrimers
         options.each do |key, value|
-#             if key.eql? "sadie.primers_dirpath"
-#                 delay_set_primers_dirpath = value
-#             else
                 set( key, value )
-#             end
         end
-        
-#         defined? delay_set_primers_dirpath \
-#             and set( "sadie.primers_dirpath", delay_set_primers_dirpath )
-        
+                
         # if a path to a session is given, init using session file
         if options.has_key?( "sadie.session_filepath" )
             set( "sadie.session_filepath", options["sadie.session_filepath"] )
@@ -197,6 +180,7 @@ class Sadie
             or @plugins_dir_paths.unshift(exppath)
         
         @@primer_plugins_initialized = nil
+        return self
     end
     
    
@@ -228,8 +212,6 @@ class Sadie
                 # skip blank lines
                 next if key.match /^\s*$/
                 
-                #puts "Prime> providing: #{key}"
-                
                 # key primed or raise error
                 primed? key \
                     or raise "primer definition file: #{current_primer_filepath} was supposed to define #{key}, but did not"
@@ -244,10 +226,6 @@ class Sadie
         # init mode, just store arghash info
         accepts_block = arghash.has_key?( "accepts-block" ) && arghash["accepts-block"] ? true : false
         prime_on_init = arghash.has_key?( "prime-on-init" ) && arghash["prime-on-init"] ? true : false
-        
-        
-        
-        
         
         # if mid plugin init, register the plugin params with the match
         if midPluginInit?
@@ -334,11 +312,6 @@ class Sadie
     # returns true if the destructOnGet flag is set for the key
     def destroyOnGet?( key )
         ( @flag_destroyonget.has_key?( key ) && @flag_destroyonget["#{key}"] )
-#         @flag_destroyonget.has_key?( key ) \
-#             or return _newline( false )
-#         @flag_destroyonget["#{key}"] \
-#             and return _newline( true )
-#         return _newline(false)
     end
     
     # ==method: set
@@ -352,37 +325,12 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
-#          puts "setCheap( #{k}, #{v} )"
-
-#         if  k.eql? "sadie.primer_plugins_dirpath" 
-#             puts "adding primer plugins dirpath via setCheap"
-#             if v.respond_to? "each"
-#                 v.each do |plugindir|
-#                     addPrimerPluginsDirPath plugindir
-#                 end
-#             else
-#                 addPrimerPluginsDirPath v
-#             end
-#             v = @plugins_dir_paths
-#         end
-        
-        
-        
         # set it, mark not expensive and primed
         _set( k, v )
         _expensive( k, false )
         
-        # if we've reset the primers dirpath, init the primers
-#         if k.eql?( "sadie.primers_dirpath" )
-#             initializePrimers
-#         end
         
        _primed( k, true )
-        
-        # if we've reset the primers dirpath, init the primers
-        #if k.eql?( "sadie.primers_dirpath" )
-        #    Sadie::setCurrentSadieInstance( self )
-        #end
         
     end
     
@@ -395,7 +343,6 @@ class Sadie
     # the expensive setter.  key, value pairs stored via this method are not kept in memory
     # but are stored to file and recalled as needed
     def setExpensive(k,v)
-#         puts "setting expensive, key: #{k}"
         expensive_filepath              = _computeExpensiveFilepath( k )
         serialized_value                = Marshal::dump( v )
         File.open(expensive_filepath, 'w') { |f|
@@ -807,9 +754,7 @@ class Sadie
     
     # direct access setter for shortterm memory
     def _set( key, value )
-#        puts "_set> key: #{key}, value: #{value}"
             @shortterm["#{key}"]           = value
-       # end
     end
     
     def _unset( key )
