@@ -323,7 +323,7 @@ class Sadie
     
     def self.templatedFileToString( filepath, binding=nil )
         
-        template = ERB.new File.new(filepath).read, nil,"%"
+        template = ERB.new File.new(filepath).read
         current_sadie_instance = Sadie::getCurrentSadieInstance
         if defined? binding
             template.result binding 
