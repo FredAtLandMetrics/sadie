@@ -17,3 +17,4 @@
 [0.0.40] removed over-debugging         
 [0.0.41] minor bugfix
 [0.0.42,0.0.43] minor bugfix (hopefully), file now closing before method exit (a punt)
+[0.0.45] bugfix (punt worked!) in templated file handling
