@@ -1,3 +1,3 @@
 class Sadie
-  VERSION = "0.0.35"
+  VERSION = "0.0.39"
 end
