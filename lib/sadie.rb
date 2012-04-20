@@ -321,11 +321,16 @@ class Sadie
         return ret
     end
     
-    def self.templatedFileToString( filepath )
-        f = open( filepath )
-        template = ERB.new( f.read )
-        f.close
-        template.result
+    def self.templatedFileToString( filepath, binding=nil )
+        
+        template = ERB.new File.new(filepath).read, nil,"%"
+        current_sadie_instance = Sadie::getCurrentSadieInstance
+        if defined? binding
+            template.result binding 
+        else
+            template.result self
+        end
+        
     end
 
     
