@@ -26,16 +26,25 @@ class TestSadieTwoDeep < Test::Unit::TestCase
             dbconx = sadie.get( "two.deep.test.dbi.conx" )
             assert_not_nil( dbconx )
             
-            # test sql22darray
+            # test eacher
+            puts "!!!"
+            puts "!!!"
+            eachertest = sadie.get("simple.eacher.test")
+            #assert_equal( eachertest, "start12end")
+            
+            # test sqlTo2DArray
             tablearray = sadie.get( "two.deep.testquery.test.sql2ar" )
+            puts "!!!"
+            puts "!!!"
             assert_not_nil( tablearray )
+            puts "tablearray: #{tablearray}"
             assert_equal( tablearray[0][0], 1 )
             assert_equal( tablearray[1][1], "testing456" )
 
             # test templating
             template_text = sadie.get( "two.deep.test_template.txt.tmpl" )
             template_text = template_text.gsub(/\s+/," ").gsub(/^\s*/,"").gsub(/\s*$/,"")
-#             puts "template text\n#{template_text}"
+            puts "template text\n#{template_text}"
             assert( (template_text.match(/later\s+gator/)), "incorrect match on template text" )
             assert( (template_text.match(/test\/test\_primers/)), "incorrect match on template text" )
         end

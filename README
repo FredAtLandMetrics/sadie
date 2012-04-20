@@ -12,6 +12,8 @@ Valid primers currently are:
   .res, .res.rb - provides access to general-purpose, programatic manipulation of data (i.e. just use sadie instance for input and output of data)
   .tmpl - simple templating engine for text-based file types
 
+There's also another file type that can be found in the primer directory called "eacher files".  These are simple files which allow for certain tasks to be performed before, after and during the priming of a key/value pair.  Currently, the only plugin that makes effective use of eachers is sql2ar and it provides a way for developers to iterate on the rows of a query result as it is initially processed into the resultant array.
+  
 It's very simple to add new primer types, so it would be simple to create primers for html, xml, csv, xls, pointers to all of the above on remote machines, or any- and everything else.
 
 At Landmetrics, we use a predecessor to Sadie to power perimetercomps[http://perimetercomps.com], producing each 50+ page report with charts, graphs and tables with only 12 queries to the database.

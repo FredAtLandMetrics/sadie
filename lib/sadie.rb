@@ -23,6 +23,10 @@ end
 
 class Sadie
     
+    BEFORE      = 1
+    AFTER       = 2
+    EACH        = 3
+    
     # ==method: Sadie::getSadieInstance
     #
     # returns a new Sadie instance.  Options match those of Sadie's constructor method
@@ -57,6 +61,252 @@ class Sadie
         current_sadie_instance = Sadie::getCurrentSadieInstance
         current_sadie_instance.prime( primer_definition, &block )
     end
+    
+    def memorizeEacherFileLocation( sadiekey, filepath )
+        
+        # store the file path
+        defined? @eacher_filepaths or @eacher_filepaths = Hash.new
+        if ! @eacher_filepaths.has_key? sadiekey
+            puts "memorizing eacher filepath #{filepath} for sadiekey: #{sadiekey}"
+            @eacher_filepaths[sadiekey] = [filepath]
+        elsif ! @eacher_filepaths[sadiekey].include? filepath
+            puts "memorizing eacher filepath #{filepath} for sadiekey: #{sadiekey}"
+            @eacher_filepaths[sadiekey].push filepath
+        end
+    end
+    
+    def eacherFilepaths( sadiekey )
+        defined? @eacher_filepaths or return nil
+        @eacher_filepaths.has_key? sadiekey or return nil
+        @eacher_filepaths[sadiekey]
+    end
+    
+    def midEacherInit?
+        defined? @eacher_init or return false
+        @eacher_init or return false
+        true
+    end
+    
+    def setEacherInit
+        @eacher_init = true
+    end
+    
+    def clearEacherInit
+        @eacher_init = nil
+    end
+
+    # ==method: Sadie::eacher
+    #
+    # called by eacher files to hook into priming operations
+#     def self.eacher( eacher_params, &block )
+#         puts "HERE!!!"
+#         current_sadie_instance = Sadie::getCurrentSadieInstance
+#         filepath = current_sadie_instance.getCurrentPrimerFilepath
+#         key_prefix = current_sadie_instance.getCurrentPrimerKeyPrefix
+#         
+#         occur_at = eacher_params[:when]
+#         puts "eacher, occur_at: #{occur_at}"
+#         
+#         # gen sadie key
+#         basefilename = filepath.gsub(/^.*\//,"")
+#         sadiekey =  key_prefix + "." + basefilename.gsub(/\.each(?:\..*)$/,"")
+#         if eacher_params.has_key? "sadiekey"
+#             sadiekey = eacher_params["sadiekey"]
+#         end
+#         
+#         if current_sadie_instance.midEacherInit?
+#             memorizeEacherFileLocation( sadiekey, filepath )
+#         elsif current_sadie_instance.whichEacherFrame == occur_at
+#             current_sadie_instance.eacher( eacher_params, &block )
+#         end
+#     end
+    
+    def eacher( params, &block )
+        filepath = getCurrentPrimerFilepath
+        key_prefix = getCurrentPrimerKeyPrefix
+        occur_at = params[:when]
+#         puts "eacher, occur_at: #{occur_at}"
+        
+        # gen sadie key
+        basefilename = filepath.gsub(/^.*\//,"")
+        sadiekey =  key_prefix + "." + basefilename.gsub(/\.each(?:\..*)*$/,"")
+        if params.has_key? "sadiekey"
+            sadiekey = params["sadiekey"]
+        end
+        
+        if midEacherInit?
+            memorizeEacherFileLocation( sadiekey, filepath )
+            
+            if params.has_key? :provides
+                #puts "> got provides!"
+                provide_array = params[:provides]
+                provide_array.respond_to? "each" or provide_array = [provide_array]
+                
+                # tell sadie that the sadiekey primer also provides everything in the provide array
+                setEachersProvidedByPrimer( sadiekey, provide_array )
+                
+                
+            end            
+            
+        elsif whichEacherFrame == occur_at
+            if block.arity == 0
+                yield self
+            else
+                yield self, getEacherParam
+            end
+        end
+    end
+    
+    def setEachersProvidedByPrimer( sadiekey, providers )
+        puts "setting eachers to be provided by #{sadiekey} primer to #{providers}"
+        
+        # record reverse map for use by eacherFrame
+        defined? @eacher_frame_redirect \
+            or @eacher_frame_redirect = Hash.new
+        providers.each do |provider|
+            @eacher_frame_redirect[provider] = sadiekey
+        end
+        
+        defined? @eachers_provided or @eachers_provided = Hash.new
+        if @eachers_provided.has_key? sadiekey
+            @eachers_provided[sadiekey] = @eachers_provided[sadiekey].concat( providers )
+        else
+            @eachers_provided[sadiekey] = providers
+        end
+    end
+    
+    def isEacherKey?( key )
+        defined? @eacher_frame_redirect or return false
+        @eacher_frame_redirect.has_key? key or return false
+        true
+    end
+    
+    def getEacherDependency( key )
+        defined? @eacher_frame_redirect or return nil
+        @eacher_frame_redirect.has_key? key or return nil
+        @eacher_frame_redirect[key]
+    end
+    
+    def getEachersProvidedByPrimer( sadiekey )
+        puts "looking for eachers provided by: #{sadiekey}"
+        defined? @eachers_provided or return nil
+        @eachers_provided.has_key? sadiekey or return nil
+        puts "found eachers for #{sadiekey}"
+        @eachers_provided[sadiekey]
+    end
+    
+    def self.eacher( eacher_params, &block )
+        current_sadie_instance = Sadie::getCurrentSadieInstance
+        current_sadie_instance.eacher( eacher_params, &block )
+    end
+    
+    
+    def self.eacherFrame( sadiekey, occur_at, param=nil )
+        current_sadie_instance = Sadie::getCurrentSadieInstance
+        current_sadie_instance.eacherFrame( sadiekey, occur_at, param )
+    end
+    
+    def eacherFrame( sadiekey, occur_at, param=nil )
+        
+        key = sadiekey
+        if defined? @eacher_frame_redirect
+            if @eacher_frame_redirect.has_key? key
+                key = @eacher_frame_redirect[key]
+            end
+        end
+        
+        puts "eacherFrame (#{key},#{occur_at})"
+        setEacherFrame( occur_at )
+        defined? param and setEacherParam( param )
+        if filepaths = eacherFilepaths( key )
+#             puts "found each file paths for key: #{key}, filepaths: #{filepaths}"
+            filepaths.each do |filepath|
+                load filepath
+            end
+        end
+        unsetEacherParam
+        unsetEacherFrame
+    end
+    
+    def whichEacherFrame
+        @eacher_frame
+    end
+    
+    def setEacherFrame( f )
+        @eacher_frame = f
+    end
+    
+    def unsetEacherFrame
+        @eacher_frame = nil
+    end
+    
+    def setEacherParam( p )
+        @eacher_param = p
+    end
+    
+    def unsetEacherParam
+        @eacher_param = nil
+    end
+    
+    def getEacherParam
+        @eacher_param
+    end
+    # == initialize eachers
+    #
+    # register all the eachers
+    #
+    # called by initializePrimers so it's not necessary to call this separate from that
+    def initializeEachers
+        
+        primers_dirpath = get( "sadie.primers_dirpath" ) \
+            or raise "sadie.primers_dirpath not set"
+
+        puts "Initializing eachers..."
+        setEacherInit
+        initializeEacherDirectory( "", primers_dirpath )
+        clearEacherInit
+        puts "...finished initializing eachers."
+        
+        
+        @@eachers_initialized = true
+    end
+    
+    def initializeEacherDirectory( key_prefix, current_dirpath )
+        
+        puts "initializing eacher directory: #{current_dirpath}"
+        Dir.foreach( current_dirpath ) do |filename|
+            
+           # skip the dit dirs
+            next if filename.eql?(".") || filename.eql?("..") || filename =~ /\~$/
+            
+            
+            filepath = File.expand_path( filename, current_dirpath )
+            
+            if File.directory? filepath
+                new_key_prefix = key_prefix + '.' + filename
+                new_key_prefix = new_key_prefix.gsub(/^\.+/,"")
+                initializeEacherDirectory( new_key_prefix, filepath )
+            else
+                if filename =~ /\.each(?:\..*)*$/
+                    initializeEacherFile( key_prefix, filepath )
+                end
+            end
+        end
+    end
+    
+    def initializeEacherFile( key_prefix, filepath )
+        puts "initializing eacher file (#{key_prefix}): #{filepath}"
+        setCurrentPrimerFilepath filepath
+        setCurrentPrimerKeyPrefix key_prefix
+        load filepath
+    end
+        
+    def eachersInitialized?
+        defined? @@eachers_initialized or return false
+        @@eachers_initialized and return true
+        return false
+    end
+    
     
     # ==method: Sadie::registerPrimerPlugin
     #
@@ -153,13 +403,14 @@ class Sadie
         end
         
         # add the default sadie plugins dir
-        plugins_dirpath = File.join(
-            ENV['GEM_HOME'],
-            "gems/sadie-#{Sadie::VERSION}",
-            "lib/sadie/primer_plugins"
-        )
-        if ! File.exists? plugins_dirpath   # for dev
-            plugins_dirpath = "lib/sadie/primer_plugins"
+        plugins_dirpath = "lib/sadie/primer_plugins"   # for dev
+        if ! File.exists? plugins_dirpath
+            plugins_dirpath = File.join(
+                ENV['GEM_HOME'],
+                "gems/sadie-#{Sadie::VERSION}",
+                "lib/sadie/primer_plugins"
+            )
+            
         end        
         addPrimerPluginsDirPath plugins_dirpath
         
@@ -235,7 +486,7 @@ class Sadie
         # midplugininit returned false, we're actually in the process of either initializing
         # a primer or actually priming
         else
-            yield( self, getCurrentPrimerKeyPrefix, @@current_primer_filepath ) \
+            yield self, getCurrentPrimerKeyPrefix, @@current_primer_filepath
         end
     end
     
@@ -399,6 +650,8 @@ class Sadie
         primerPluginsInitialized? \
             or initializePrimerPlugins
         
+        eachersInitialized? \
+            or initializeEachers
         
         primers_dirpath = get( "sadie.primers_dirpath" ) \
             or raise "sadie.primers_dirpath not set"
@@ -549,7 +802,7 @@ class Sadie
         Dir.foreach( current_dirpath ) do |filename|
             
            # skip the dit dirs
-            next if filename.eql?(".") || filename.eql?("..")
+            next if filename.eql?(".") || filename.eql?("..") || filename =~ /\~$/
             
             filepath = File.expand_path( filename, current_dirpath )
             
@@ -653,7 +906,22 @@ class Sadie
         # interate over provides setting primer providers for each
         primer_provides.each do | key |
             setPrimerProvider( key, filepath, plugin_filepath, getCurrentPrimerKeyPrefix )
+            
+#             # handle eachers
+#             if eachers_provided = getEachersProvidedByPrimer( key )
+#                 eachers_provided.each do |eacherkey|
+#                     
+# #                     Sadie::prime( { "provides" => [ eacherkey ] }) do |sadie|
+# #                         puts "calling sadie.get(#{key} to produce #{eacherkey}"
+# #                         sadie.get key
+# #                     end
+#                     
+# #                     puts "setting eacher #{eacherkey} to be provided by file: #{filepath}"
+# #                     setPrimerProvider( eacherkey, filepath, plugin_filepath, getCurrentPrimerKeyPrefix )
+#                 end
+#             end
         end
+        
     end
     
     
@@ -701,19 +969,25 @@ class Sadie
     end
 
     def _prime ( k )
+        puts ">>>priming: #{k}"
         
-        if provider  = getPrimerProvider( k )
-            primer_filepath, plugin_filepath, key_prefix = provider
+        if isEacherKey? k
+            get( getEacherDependency( k ) )
+        else
         
-            setCurrentPrimerFilepath(primer_filepath)
-            setCurrentPrimerKeyPrefix( key_prefix )
-            Sadie::setCurrentSadieInstance( self )
+            Sadie::eacherFrame( k, BEFORE )
+            if provider  = getPrimerProvider( k )
+                puts "got provider for sadiekey: #{k}"
+                primer_filepath, plugin_filepath, key_prefix = provider
             
-#             puts "_prime( #{k} ) loading #{provider}"
-            
-            load plugin_filepath
+                setCurrentPrimerFilepath(primer_filepath)
+                setCurrentPrimerKeyPrefix( key_prefix )
+                Sadie::setCurrentSadieInstance( self )
+                
+                load plugin_filepath
+            end
+            Sadie::eacherFrame( k, AFTER )
         end
-        
     end
     
 
