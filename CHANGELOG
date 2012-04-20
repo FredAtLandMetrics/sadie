@@ -15,3 +15,5 @@
 [0.0.39] added lots of debugging that's going to need to come out, but also added eachers, a VERY cool
          enhancement that offers a huge optimization path with very low developer resources
 [0.0.40] removed over-debugging         
+[0.0.41] minor bugfix
+[0.0.42] minor bugfix (hopefully), file now closing before method exit (a punt)

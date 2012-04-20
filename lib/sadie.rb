@@ -4,6 +4,7 @@ require "bundler/setup"
 require 'bundler'
 Bundler.require(:default)
 require 'sadie/defaults'
+require 'sadie/version'
 require 'erb'
 
 # ==Description: Sadie
@@ -323,6 +324,7 @@ class Sadie
     def self.templatedFileToString( filepath )
         f = open( filepath )
         template = ERB.new( f.read )
+        f.close
         template.result
     end
 
