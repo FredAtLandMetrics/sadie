@@ -3,6 +3,8 @@ $LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
 require "test/unit"
 require "sadie"
 require "tmpdir"
+# require "mysql"
+#require "dbd-mysql"
 
 class TestSadieTwoDeep < Test::Unit::TestCase
     def test_simple

@@ -13,4 +13,3 @@ Sadie::eacher( :when => Sadie::AFTER, :provides => ["simple.eacher.test"]   ) do
     sadie.set "simple.eacher.test", @testeach 
 end
 
-#def dsl_correct?; ( bitch_to_wrap_head_around? ) && ( rewritten_atleast_three_times? ) && ( seems_easy_now_that_its_done? ) && ( have_less_hair_now? ); end

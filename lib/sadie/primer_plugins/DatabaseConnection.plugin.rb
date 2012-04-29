@@ -32,10 +32,19 @@ Sadie::registerPrimerPlugin( {  "match" => /\.dbi\.conx$/,
                 
                 # call connect with block
                 require 'rubygems'
-                require 'mysql'
+                #require 'mysql'
+                #require 'pg'
                 require 'dbi'
+                #require "dbd-mysql"
                 
-                dbh = DBI.connect( dbparams['dbistr'], user, pass )
+                begin
+                    dbh = DBI.connect( dbparams['dbistr'], user, pass )
+                rescue DBI::DatabaseError => e
+                    puts "A database connection error occurred..."
+                    puts "  Error code: #{e.err}"
+                    puts "  Error message: #{e.errstr}"
+                    exit
+                end
                 
                 # determine key
                 #sadie_key = key_prefix+'.'+File.basename( primer_file_filepath )

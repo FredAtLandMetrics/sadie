@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
 
   #s.add_runtime_dependency "ini"
   s.add_runtime_dependency "dbi"
-  s.add_runtime_dependency "mysql"
+  #s.add_runtime_dependency "mysql2"
   s.add_runtime_dependency "dbd-mysql"
   s.extra_rdoc_files = ['README', 'CHANGELOG', 'TODO']
 end
