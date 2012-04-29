@@ -16,6 +16,13 @@ class TestSadieToplevel < Test::Unit::TestCase
                                                 "sadie.primer_plugins_dirpath" => "lib/sadie/primer_plugins" } )
             sadie.initializePrimers
             
+            # test eacher on non-intentional non-prime
+            
+#             te = sadie.get( "toplevel_testeach" )
+#             puts "TE: #{te}"
+            assert_equal( sadie.get( "toplevel_testeach" ), "blahbloo" ) 
+            assert_equal( sadie.get( "toplevel_somegroup.eachtest" ), "blooblah" ) 
+                          
             # test top-level ini
             assert_equal( sadie.get( "toplevel.somegroup.somekey"       ), "someval"    )
             assert_equal( sadie.get( "toplevel.anothergroup.anotherkey" ), "anotherval" )

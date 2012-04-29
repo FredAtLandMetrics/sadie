@@ -19,3 +19,4 @@
 [0.0.42,0.0.43] minor bugfix (hopefully), file now closing before method exit (a punt)
 [0.0.45] bugfix (punt worked!) in templated file handling
 [0.0.46] massive code cleanup. moved lots of things to private. documented all public methods.
+[0.0.47] eachers now sane and can be set on any key, even other eacher provided keys

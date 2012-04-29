@@ -4,7 +4,8 @@ Sadie::eacher( :when => Sadie::BEFORE   ) do |sadie|
     @testeach = "start"
 end
 
-Sadie::eacher(  :when => Sadie::EACH, :sadiekey => "two.deep.testquery.test.sql2ar"  ) do |sadie,param|
+Sadie::eacher(  :when => Sadie::EACH,
+                :sadiekey => "two.deep.testquery.test.sql2ar"  ) do |sadie,param|
     @testeach = "#{@testeach}#{param[0]}"
 end
 

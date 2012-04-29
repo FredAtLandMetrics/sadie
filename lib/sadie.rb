@@ -255,16 +255,21 @@ class Sadie
         
         # gen sadie key
         basefilename    = filepath.gsub(/^.*\//,"")
-        sadiekey        =  key_prefix + "." + basefilename.gsub(/\.each(?:\..*)*$/,"")
+        sadiekey        = key_prefix + "." + basefilename.gsub(/\.each(?:\..*)*$/,"")
+        sadiekey        = sadiekey.gsub( /^\.+/,"" )
         if params.has_key? "sadiekey"
             sadiekey    = params["sadiekey"]
         end
         
         if midEacherInit?
+            
+            debug! 10, "in mid eacher init (#{sadiekey})"
+            
             memorizeEacherFileLocation( sadiekey, filepath )
             
             if params.has_key? :provides
                 
+                # make sure we're passing an array
                 provide_array = params[:provides]
                 provide_array.respond_to? "each" or provide_array = [provide_array]
                 
@@ -282,7 +287,7 @@ class Sadie
         end
     end
     
-    # ==method: eacher
+    # ==method: eacherFrame
     #
     # ( usually this will be called by the class method...it looks better )
     #
@@ -290,17 +295,20 @@ class Sadie
     #    
     def eacherFrame( sadiekey, occur_at, param=nil )
         
+        debug! 8, "eacherFrame(#{occur_at}): #{sadiekey}"
+        
         key = sadiekey
-        if defined? @eacher_frame_redirect
-            if @eacher_frame_redirect.has_key? key
-                key = @eacher_frame_redirect[key]
-            end
-        end
+#         if defined? @eacher_frame_redirect
+#             if @eacher_frame_redirect.has_key? key
+#                 key = @eacher_frame_redirect[key]
+#             end
+#         end
         
         setEacherFrame( occur_at )
         defined? param and setEacherParam( param )
         if filepaths = eacherFilepaths( key )
             filepaths.each do |filepath|
+                debug! 10, "each frame loading: #{filepath} for key: #{key}"
                 load filepath
             end
         end
@@ -408,9 +416,23 @@ class Sadie
         
         debug! 10, "get(#{k})"
         
+        defined? @eacher_frame_redirect or @eacher_frame_redirect = Hash.new
+        
         if ! isset?( k )
-            # prime if not yet primed
-            primed?( k ) or _prime( k )
+            debug! 10, "#{k} is not set"
+            if isEacherKey?( k )
+                debug! 10, "sadiekey: #[k} is eacher, fetching: #{@eacher_frame_redirect[k]}"
+                get @eacher_frame_redirect[k]
+            
+            elsif primeable?( k )
+                
+                debug! 10, "calling eacher from get method for #{k}"
+                setUnbalancedEacher k
+                Sadie::eacherFrame( k, BEFORE )
+                
+                # prime if not yet primed
+                primed?( k ) or _prime( k )
+            end
         end
         
         return _recallExpensive( k ) if expensive?( k )
@@ -485,14 +507,22 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
-        debug! 10,  "setting: #{k}"
+        debug! 9,  "setting cheap: #{k}"
+        Sadie::eacherFrame( k, BEFORE ) if ! eacherUnbalanced?( k )
+                setUnbalancedEacher k
+        
+        if getDebugLevel == 10
+            debug! 10, "dumping value:"
+            pp v
+        end
         
         # set it, mark not expensive and primed
         _set( k, v )
         _expensive( k, false )
+        _primed( k, true )
         
-        
-       _primed( k, true )
+        Sadie::eacherFrame( k, AFTER, v )
+        clearUnbalancedEacher k
         
     end
     
@@ -501,6 +531,12 @@ class Sadie
     # the expensive setter.  key, value pairs stored via this method are not kept in memory
     # but are stored to file and recalled as needed
     def setExpensive(k,v)
+        
+        debug! 9,  "setting expensive: #{k}"
+        Sadie::eacherFrame( k, BEFORE ) if ! eacherUnbalanced?( k )
+                         setUnbalancedEacher k
+
+        
         expensive_filepath              = _computeExpensiveFilepath( k )
         serialized_value                = Marshal::dump( v )
         
@@ -512,6 +548,9 @@ class Sadie
         }
         _expensive( k, true )
         _primed( k, true )
+        
+        Sadie::eacherFrame( k, AFTER, v )
+        clearUnbalancedEacher k
     end
 
     
@@ -572,9 +611,28 @@ class Sadie
     end
     
 
-    
+# ------------------------------------------------------------------------------------------------    
+# ------------------------------------------------------------------------------------------------    
+
     private
 
+    def setUnbalancedEacher( k )
+        debug! 10, "setting eacher unbalanced: #{k}"
+        defined? @eacher_unbalanced or @eacher_unbalanced = Hash.new
+        @eacher_unbalanced[k] = true
+    end
+    
+    def clearUnbalancedEacher( k )
+         debug! 10, "clearing eacher unbalanced: #{k}"
+       @eacher_unbalanced[k] = false if defined? @eacher_unbalanced
+    end
+    
+    def eacherUnbalanced?( k )
+        return false if ! defined? @eacher_unbalanced
+        return false if ! @eacher_unbalanced.has_key?( k )
+        return @eacher_unbalanced[k]
+    end
+    
     def cheap?( k )
         ! expensive? ( k )
     end
@@ -613,7 +671,7 @@ class Sadie
     
     def initializeEacherDirectory( key_prefix, current_dirpath )
         
-        puts "initializing eacher directory: #{current_dirpath}"
+        debug! 3, "initializing eacher directory: #{current_dirpath}"
         Dir.foreach( current_dirpath ) do |filename|
             
            # skip the dit dirs
@@ -635,7 +693,7 @@ class Sadie
     end
     
     def initializeEacherFile( key_prefix, filepath )
-        puts "initializing eacher file (#{key_prefix}): #{filepath}"
+        debug! 8, "initializing eacher file (#{key_prefix}): #{filepath}"
         setCurrentPrimerFilepath filepath
         setCurrentPrimerKeyPrefix key_prefix
         load filepath
@@ -676,9 +734,10 @@ class Sadie
     
 
     def isEacherKey?( key )
+        
         defined? @eacher_frame_redirect or return false
         @eacher_frame_redirect.has_key? key or return false
-        true
+        return true
     end
     
     def getEacherDependency( key )
@@ -722,6 +781,7 @@ class Sadie
         defined? @eacher_frame_redirect \
             or @eacher_frame_redirect = Hash.new
         providers.each do |provider|
+            debug! 10, "setting provider reverse map for #{provider} to #{sadiekey}"
             @eacher_frame_redirect[provider] = sadiekey
         end
         
@@ -736,7 +796,7 @@ class Sadie
     
     
     def memorizeEacherFileLocation( sadiekey, filepath )
-        
+        debug! 10, "memorizing eacher file location: #{filepath} for #{sadiekey}"
         # store the file path
         defined? @eacher_filepaths or @eacher_filepaths = Hash.new
         if ! @eacher_filepaths.has_key? sadiekey
@@ -1009,6 +1069,13 @@ class Sadie
         
     end
     
+    def primeable?( key )
+        p = getPrimerProvider( key )
+        return nil if ! defined? (p )
+        return nil if p == nil
+        return true
+    end
+    
     def getPrimerProvider( key )
         
         # fetch primers dirpath and validate the primer hash
@@ -1047,7 +1114,7 @@ class Sadie
             get( getEacherDependency( k ) )
         else
         
-            Sadie::eacherFrame( k, BEFORE )
+            #Sadie::eacherFrame( k, BEFORE )
             if provider  = getPrimerProvider( k )
                 primer_filepath, plugin_filepath, key_prefix = provider
             
@@ -1063,7 +1130,7 @@ class Sadie
                     setCurrentPrimerFilepath currfilepath
                 end
             end
-            Sadie::eacherFrame( k, AFTER )
+            #Sadie::eacherFrame( k, AFTER )
         end
     end
     
