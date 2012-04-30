@@ -261,7 +261,7 @@ class Sadie
             sadiekey    = params["sadiekey"]
         end
         
-        whichEacherFrame != Sadie::EACH and debug! 8, "whicheacherframe: #{whichEacherFrame}, occur_at: #{occur_at}"
+        whichEacherFrame != Sadie::EACH and debug! 10, "whicheacherframe: #{whichEacherFrame}, occur_at: #{occur_at}"
         
         if midEacherInit?
             
@@ -282,7 +282,7 @@ class Sadie
             
         elsif whichEacherFrame == occur_at
             
-            occur_at != Sadie::EACH and debug! 8, "pre-yield for skey: #{sadiekey}, #{occur_at}"
+            occur_at != Sadie::EACH and debug! 10, "pre-yield for skey: #{sadiekey}, #{occur_at}"
             
             if block.arity == 0
                 yield self
@@ -290,7 +290,7 @@ class Sadie
                 yield self, getEacherParam
             end
             
-            occur_at != Sadie::EACH and debug! 8, "post-yield for skey: #{sadiekey}, #{occur_at}"
+            occur_at != Sadie::EACH and debug! 10, "post-yield for skey: #{sadiekey}, #{occur_at}"
         end
     end
     
@@ -470,7 +470,9 @@ class Sadie
     #
     # returns true if sadie has a value for the key
     def isset?( key )
-        return @shortterm.has_key?( key )
+        return true if @shortterm.has_key?( key )
+        return true if expensive?( key )
+        false
     end
     
     # ==method: setDestroyOnGet
