@@ -261,6 +261,8 @@ class Sadie
             sadiekey    = params["sadiekey"]
         end
         
+        whichEacherFrame != Sadie::EACH and debug! 8, "whicheacherframe: #{whichEacherFrame}, occur_at: #{occur_at}"
+        
         if midEacherInit?
             
             debug! 10, "in mid eacher init (#{sadiekey})"
@@ -279,11 +281,16 @@ class Sadie
             end            
             
         elsif whichEacherFrame == occur_at
+            
+            occur_at != Sadie::EACH and debug! 8, "pre-yield for skey: #{sadiekey}, #{occur_at}"
+            
             if block.arity == 0
                 yield self
             else
                 yield self, getEacherParam
             end
+            
+            occur_at != Sadie::EACH and debug! 8, "post-yield for skey: #{sadiekey}, #{occur_at}"
         end
     end
     
@@ -295,7 +302,7 @@ class Sadie
     #    
     def eacherFrame( sadiekey, occur_at, param=nil )
         
-        debug! 8, "eacherFrame(#{occur_at}): #{sadiekey}"
+        occur_at != Sadie::EACH and debug! 8, "eacherFrame(#{occur_at}): #{sadiekey}"
         
         key = sadiekey
 #         if defined? @eacher_frame_redirect
@@ -308,7 +315,7 @@ class Sadie
         defined? param and setEacherParam( param )
         if filepaths = eacherFilepaths( key )
             filepaths.each do |filepath|
-                debug! 10, "each frame loading: #{filepath} for key: #{key}"
+                 occur_at != Sadie::EACH and debug! 8, "eacher frame loading: #{filepath} for key: #{key}"
                 load filepath
             end
         end
@@ -709,15 +716,19 @@ class Sadie
     
     
     def whichEacherFrame
-        @eacher_frame
+        return nil if ! defined? @eacher_frame
+        @eacher_frame.last
     end
     
     def setEacherFrame( f )
-        @eacher_frame = f
+        defined? @eacher_frame or @eacher_frame = Array.new
+        @eacher_frame.push f
     end
     
     def unsetEacherFrame
-        @eacher_frame = nil
+        if defined? @eacher_frame
+            @eacher_frame.pop
+        end
     end
     
     def setEacherParam( p )
