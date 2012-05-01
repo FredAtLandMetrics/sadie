@@ -310,13 +310,6 @@ class Sadie
         
         occur_at != Sadie::EACH and debug! 8, "eacherFrame(#{occur_at}): #{sadiekey}"
         
-#         key = sadiekey
-#         if defined? @eacher_frame_redirect
-#             if @eacher_frame_redirect.has_key? key
-#                 key = @eacher_frame_redirect[key]
-#             end
-#         end
-        
         setEacherFrame( occur_at )
         defined? param and setEacherParam( param )
         setEacherKey sadiekey

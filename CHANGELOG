@@ -24,3 +24,4 @@
 [0.0.49] botched the upload...resubmitting
 [0.0.50] fixed isset? bug (was only working for non-expensive keys)
 [0.0.51] eacher bugfix. now correctly handles specific keys.
+[0.0.52] code cleanup
