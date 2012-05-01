@@ -261,6 +261,7 @@ class Sadie
             sadiekey    = params[:sadiekey]
         end
         
+        
         whichEacherFrame != Sadie::EACH and debug! 10, "whicheacherframe: #{whichEacherFrame}, occur_at: #{occur_at}"
         
         if midEacherInit?
@@ -282,6 +283,11 @@ class Sadie
             
         elsif whichEacherFrame == occur_at
             
+            # bugfix: running eachers that aren't supposed to be run because they're
+            #         in the same eacher file
+            #puts "sadiekey: #{sadiekey}, getEacherKey: #{getEacherKey}"
+            #return if sadiekey != getEacherKey
+           
             occur_at != Sadie::EACH and debug! 10, "pre-yield for skey: #{sadiekey}, #{occur_at}"
             
             if block.arity == 0
@@ -304,7 +310,7 @@ class Sadie
         
         occur_at != Sadie::EACH and debug! 8, "eacherFrame(#{occur_at}): #{sadiekey}"
         
-        key = sadiekey
+#         key = sadiekey
 #         if defined? @eacher_frame_redirect
 #             if @eacher_frame_redirect.has_key? key
 #                 key = @eacher_frame_redirect[key]
@@ -313,14 +319,16 @@ class Sadie
         
         setEacherFrame( occur_at )
         defined? param and setEacherParam( param )
-        if filepaths = eacherFilepaths( key )
+        setEacherKey sadiekey
+        if filepaths = eacherFilepaths( sadiekey )
             filepaths.each do |filepath|
-                 occur_at != Sadie::EACH and debug! 8, "eacher frame loading: #{filepath} for key: #{key}"
+                 occur_at != Sadie::EACH and debug! 8, "eacher frame loading: #{filepath} for sadiekey: #{sadiekey}"
                 load filepath
             end
         end
         unsetEacherParam
         unsetEacherFrame
+        unsetEacherKey
     end
     
     
@@ -516,7 +524,7 @@ class Sadie
     # the cheap setter.  key, value pairs stored via this method are kept in memory
     def setCheap( k, v )
         
-        debug! 9,  "setting cheap: #{k}"
+#         debug! 8,  "setting cheap: [#{k},#{v}]"
         Sadie::eacherFrame( k, BEFORE ) if ! eacherUnbalanced?( k )
                 setUnbalancedEacher k
         
@@ -619,6 +627,12 @@ class Sadie
         @flag_primed[primers_dirpath] = true
     end
     
+    def getEacherKey
+        return nil if ! defined? @eacher_key
+        @eacher_key.last
+    end
+    
+
 
 # ------------------------------------------------------------------------------------------------    
 # ------------------------------------------------------------------------------------------------    
@@ -734,18 +748,33 @@ class Sadie
     end
     
     def setEacherParam( p )
-        @eacher_param = p
+        defined? @eacher_param or @eacher_param = Array.new
+        @eacher_param.push p
     end
     
     def unsetEacherParam
-        @eacher_param = nil
+        if defined? @eacher_param
+            @eacher_param.pop
+        end
     end
     
     def getEacherParam
-        @eacher_param
+        return nil if ! defined? @eacher_param
+        @eacher_param.last
     end
     
-
+    def setEacherKey( k )
+        defined? @eacher_key or @eacher_key = Array.new
+        @eacher_key.push k
+    end
+    
+    def unsetEacherKey
+        if defined? @eacher_key
+            @eacher_key.pop
+        end
+    end
+    
+ 
     def isEacherKey?( key )
         
         defined? @eacher_frame_redirect or return false
