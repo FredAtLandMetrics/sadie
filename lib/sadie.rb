@@ -172,18 +172,18 @@ class Sadie
         _checkClassSanity
         
         Sadie::setCurrentSadieInstance( self )
-        
+
         # internalize defaults to shortterm
         DEFAULTS.each do |key, value|
                 _set( key, value )
         end
-        
+
         # iterate over constructor args, but do primers_dirpath last since it
         # causes a call to initializePrimers
         options.each do |key, value|
                 set( key, value )
         end
-                
+
         # if a path to a session is given, init using session file
         if options.has_key?( "sadie.session_filepath" )
             set( "sadie.session_filepath", options["sadie.session_filepath"] )
@@ -257,8 +257,8 @@ class Sadie
         basefilename    = filepath.gsub(/^.*\//,"")
         sadiekey        = key_prefix + "." + basefilename.gsub(/\.each(?:\..*)*$/,"")
         sadiekey        = sadiekey.gsub( /^\.+/,"" )
-        if params.has_key? "sadiekey"
-            sadiekey    = params["sadiekey"]
+        if params.has_key? :sadiekey
+            sadiekey    = params[:sadiekey]
         end
         
         whichEacherFrame != Sadie::EACH and debug! 10, "whicheacherframe: #{whichEacherFrame}, occur_at: #{occur_at}"
@@ -809,7 +809,7 @@ class Sadie
     
     
     def memorizeEacherFileLocation( sadiekey, filepath )
-        debug! 10, "memorizing eacher file location: #{filepath} for #{sadiekey}"
+        debug! 8, "memorizing eacher file location: #{filepath} for #{sadiekey}"
         # store the file path
         defined? @eacher_filepaths or @eacher_filepaths = Hash.new
         if ! @eacher_filepaths.has_key? sadiekey
