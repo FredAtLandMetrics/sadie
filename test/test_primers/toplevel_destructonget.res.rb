@@ -6,4 +6,5 @@ Sadie::prime( "provides" =>     %w{ toplevel_destructonget.oneprime
     sadie.set( "toplevel_destructonget.oneprime", "primedthem - #{timeinsecs}" )
     sadie.set( "toplevel_destructonget.twoprime", "primedthem" )
     sadie.setDestroyOnGet("toplevel_destructonget.oneprime")
+    sadie.setDestroyOnGet("toplevel_destructonget.twoprime")
 end

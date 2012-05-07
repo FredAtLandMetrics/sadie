@@ -30,7 +30,11 @@ class TestSadieToplevel < Test::Unit::TestCase
             # test top-level res
             assert_equal( sadie.get( "toplevel_single.oneprime" ), "primedit" )
             
-            # test destruct on get
+            # test destruct-on-get (or always prime)
+            #   the primer sets .oneprime with the current time appended (to the millisecond)
+            #   but it sets .twoprime the same each time.  the sleep insures that at least
+            #   a millisecond has passed so that the value should be different the second time
+            #   it gets set
             dog1a = sadie.get( "toplevel_destructonget.oneprime" )
             dog2a = sadie.get( "toplevel_destructonget.twoprime" )
             dog2b = sadie.get( "toplevel_destructonget.twoprime" )
@@ -38,6 +42,7 @@ class TestSadieToplevel < Test::Unit::TestCase
             dog1b = sadie.get( "toplevel_destructonget.oneprime" )
             assert_equal( dog2a, dog2b )
             assert_not_equal( dog1a, dog1b )
+            
         end
     end
 end

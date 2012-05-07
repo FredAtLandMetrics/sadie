@@ -426,22 +426,7 @@ class Sadie
         
         defined? @eacher_frame_redirect or @eacher_frame_redirect = Hash.new
         
-        if ! isset?( k )
-            debug! 10, "#{k} is not set"
-            if isEacherKey?( k )
-                debug! 10, "sadiekey: #[k} is eacher, fetching: #{@eacher_frame_redirect[k]}"
-                get @eacher_frame_redirect[k]
-            
-            elsif primeable?( k )
-                
-                debug! 10, "calling eacher from get method for #{k}"
-                setUnbalancedEacher k
-                Sadie::eacherFrame( k, BEFORE )
-                
-                # prime if not yet primed
-                primed?( k ) or _prime( k )
-            end
-        end
+        primeIfUnset k
         
         return _recallExpensive( k ) if expensive?( k )
         
@@ -458,6 +443,38 @@ class Sadie
             return return_value
         end
         
+    end
+
+    # ==method: primeIfUnset
+    #
+    # if key is not set and a primer exists, compels Sadie to prime.  this is automatically called by get.
+    #
+    def primeIfUnset( k )
+        if ! isset?( k )
+            debug! 10, "#{k} is not set"
+            if isEacherKey?( k )
+                debug! 10, "sadiekey: #[k} is eacher, fetching: #{@eacher_frame_redirect[k]}"
+                lowlevelPrimeEacherTarget k
+            
+            elsif primeable?( k )
+                if ! primed?( k )
+                    debug! 10, "calling eacher from get method for #{k}"
+                    lowlevelPrimeWithPrimer k
+                end
+            end
+        end
+    end
+    
+    def lowlevelPrimeEacherTarget( k )
+        get @eacher_frame_redirect[k]
+    end
+    
+    def lowlevelPrimeWithPrimer( k )
+        setUnbalancedEacher k
+        Sadie::eacherFrame( k, BEFORE )
+        
+        # prime if not yet primed
+        _prime( k )
     end
     
     # ==method: output
