@@ -33,8 +33,9 @@ class TestSadieToplevel < Test::Unit::TestCase
             # test destruct-on-get (or always prime)
             #   the primer sets .oneprime with the current time appended (to the millisecond)
             #   but it sets .twoprime the same each time.  the sleep insures that at least
-            #   a millisecond has passed so that the value should be different the second time
-            #   it gets set
+            #   a hundredth of a second has passed so that the value will be different the
+            #   second time the primer is run.  The inequality is intended and it becomes a
+            #   simple way to test the proper functioning of the setDestroyOnGet method
             dog1a = sadie.get( "toplevel_destructonget.oneprime" )
             dog2a = sadie.get( "toplevel_destructonget.twoprime" )
             dog2b = sadie.get( "toplevel_destructonget.twoprime" )
