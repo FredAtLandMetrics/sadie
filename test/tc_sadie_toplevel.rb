@@ -1,6 +1,3 @@
-#$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
-#$LOAD_PATH << File.join(File.dirname(__FILE__), '..', 'lib')
-#$:.unshift(File.expand_path('./lib', ENV['rvm_path']))
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 $:.unshift ENV["GEM_HOME"]
 
@@ -17,9 +14,6 @@ class TestSadieToplevel < Test::Unit::TestCase
             sadie.initializePrimers
             
             # test eacher on non-intentional non-prime
-            
-#             te = sadie.get( "toplevel_testeach" )
-#             puts "TE: #{te}"
             assert_equal( sadie.get( "toplevel_testeach" ), "blahbloo" ) 
             assert_equal( sadie.get( "toplevel_somegroup.eachtest" ), "blooblah" ) 
                           

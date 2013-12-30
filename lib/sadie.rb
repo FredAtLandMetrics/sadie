@@ -1166,7 +1166,6 @@ class Sadie
             get( getEacherDependency( k ) )
         else
         
-            #Sadie::eacherFrame( k, BEFORE )
             if provider  = getPrimerProvider( k )
                 primer_filepath, plugin_filepath, key_prefix = provider
             
@@ -1182,7 +1181,6 @@ class Sadie
                     setCurrentPrimerFilepath currfilepath
                 end
             end
-            #Sadie::eacherFrame( k, AFTER )
         end
     end
     
