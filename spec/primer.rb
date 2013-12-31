@@ -22,7 +22,15 @@ describe Primer do
       p.set( "simple.value" )
     end
     mech.get( "simple.test" ).should == "simple.value"
-    
+  end
+  
+  it "should successfully load a primer file using decorate method" do
+    storage = SadieStorageManager.new
+    mech = SadieStorageMechanismMemory.new
+    storage.register_storage_mechanism :memory, mech
+    p = Primer.new( :storage_manager => storage )
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'minimal.rb') )
+    mech.get( "minimal.primer" ).should == "testval"
   end
   
 #   it "should properly assign a value" do

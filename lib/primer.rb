@@ -15,14 +15,14 @@ class Primer
   
   def decorate( primer_filepath )
     if File.exists?( primer_filepath )
-      load primer_filepath 
+      self.instance_eval File.open(primer_filepath, 'rb') { |f| f.read } 
     else
       raise ArgumentError, "#{primer_filepath} not found"
     end
   end
   
   def prime( k )
-    keys = k.is_a?( Array ) ? k : [k]
+    self.keys = k.is_a?( Array ) ? k : [k]
     yield if block_given?
   end
   
