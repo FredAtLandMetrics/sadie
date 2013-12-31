@@ -101,7 +101,7 @@ describe Primer do
     mech.get( "minimal.primer" ).should == "testval"
   end
   
-  it "should successfully execute before clauses" do
+  it "should successfully execute before each clauses" do
     
     storage = SadieStorageManager.new
     mech = SadieStorageMechanismMemory.new
@@ -110,7 +110,7 @@ describe Primer do
     def p.get_r
       @r
     end
-    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_before.rb') )
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_before_each.rb') )
     mech.get( "test.var1" ).should == "val1"
     mech.get( "test.var2" ).should == "val2"
     r= p.get_r
@@ -118,6 +118,24 @@ describe Primer do
     r.has_key?("test.var2").should be_true
     r["test.var1"].should == 1
     r["test.var2"].should == 1
+  end
+  
+  it "should successfully execute before key clauses" do
+    
+    storage = SadieStorageManager.new
+    mech = SadieStorageMechanismMemory.new
+    storage.register_storage_mechanism :memory, mech
+    p = Primer.new( :storage_manager => storage )
+    def p.get_r
+      @r
+    end
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_before_key.rb') )
+    mech.get( "test.var1" ).should == "val1"
+    mech.get( "test.var2" ).should == "val2"
+    r= p.get_r
+    r.has_key?("test.var1").should be_true
+    r.has_key?("test.var2").should be_false
+    r["test.var1"].should == 1
   end
   
 end

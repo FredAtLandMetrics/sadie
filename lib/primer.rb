@@ -27,6 +27,12 @@ class Primer
       if block_given?
         @before_block[:each] = block
       end
+    elsif arg.is_a? String
+      if self.keys.index( arg ).nil?
+        raise 'key passed as argument to before must be declared in the prime directive'
+      else
+        @before_block[arg] = block
+      end
     end
   end
   
@@ -71,12 +77,20 @@ class Primer
         raise 'assigning keys that are not given as arguments to assign (or to prime, if assign was given no keys as arguments) is not permitted'
       end
       
-      unless @before_block[:each].nil?
+      if @before_block.has_key?(:each) && ! @before_block[:each].nil?
         
         Array(keys).each do |key|
           @before_block[:each].call(key)
         end
         
+      end
+      
+      Array(keys).each do |key|
+        if @before_block.has_key?(key) && ! @before_block[key].nil?
+          
+          @before_block[key].call(key)
+          
+        end
       end
       
       self.storage_manager.set(
@@ -88,6 +102,20 @@ class Primer
   end
   
   def _set1( value )
+    unless @before_block[:each].nil?
+      
+      Array(keys).each do |key|
+        @before_block[:each].call(key)
+      end
+      
+    end
+    Array(self.assign_keys).each do |key|
+      if @before_block.has_key?(key) && ! @before_block[key].nil?
+        
+        @before_block[key].call(key)
+        
+      end
+    end
     self.storage_manager.set(
       :mechanism => self.storage_mechanism,
       :keys => self.assign_keys,
