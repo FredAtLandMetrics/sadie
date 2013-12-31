@@ -4,6 +4,7 @@ class Primer
   
   def initialize( params=nil )
     self.storage_mechanism = :memory
+    @before_block = {}
     unless params.nil?
       if params.is_a? Hash
         if params.has_key?( :storage_manager )
@@ -21,19 +22,12 @@ class Primer
     end
   end
   
-  def _validate_key_arg( k=nil )
-    if k.is_a?(String)
-      true
-    elsif k.is_a?( Array )
-      k.each do |key|
-        unless key.is_a?( String )
-          raise 'keys must be string or array or strings'
-        end
+  def before( arg, &block )
+    if arg == :each
+      if block_given?
+        @before_block[:each] = block
       end
-    else
-      raise 'keys must be string or array or strings'
     end
-    true
   end
   
   def prime( k=nil )
@@ -62,7 +56,13 @@ class Primer
       _set2(keys,value)
     end
   end
-    
+  
+  def store_in( mech )
+    self.storage_mechanism = mech
+  end
+  
+  private
+  
   def _set2( keys=nil, value )
     if keys.nil?
       _set1(value)
@@ -70,6 +70,15 @@ class Primer
       unless (Array( keys ) - self.assign_keys).empty?
         raise 'assigning keys that are not given as arguments to assign (or to prime, if assign was given no keys as arguments) is not permitted'
       end
+      
+      unless @before_block[:each].nil?
+        
+        Array(keys).each do |key|
+          @before_block[:each].call(key)
+        end
+        
+      end
+      
       self.storage_manager.set(
         :mechanism => self.storage_mechanism,
         :keys => Array(keys),
@@ -86,8 +95,19 @@ class Primer
     )
   end
   
-  def store_in( mech )
-    self.storage_mechanism = mech
+  def _validate_key_arg( k=nil )
+    if k.is_a?(String)
+      true
+    elsif k.is_a?( Array )
+      k.each do |key|
+        unless key.is_a?( String )
+          raise 'keys must be string or array or strings'
+        end
+      end
+    else
+      raise 'keys must be string or array or strings'
+    end
+    true
   end
   
 end

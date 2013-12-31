@@ -26,15 +26,6 @@ describe Primer do
     mech.get( "simple.test" ).should == "simple.value"
   end
   
-  it "should successfully load a primer file using decorate method" do
-    storage = SadieStorageManager.new
-    mech = SadieStorageMechanismMemory.new
-    storage.register_storage_mechanism :memory, mech
-    p = Primer.new( :storage_manager => storage )
-    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'minimal.rb') )
-    mech.get( "minimal.primer" ).should == "testval"
-  end
-  
   it "should not allow assignment for keys not mentioned in the prime directive" do
     expect {
       storage = SadieStorageManager.new
@@ -101,5 +92,32 @@ describe Primer do
     mech.get("simple.test").should == "someval"
   end
   
-
+  it "should successfully load a primer file using decorate method" do
+    storage = SadieStorageManager.new
+    mech = SadieStorageMechanismMemory.new
+    storage.register_storage_mechanism :memory, mech
+    p = Primer.new( :storage_manager => storage )
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'minimal.rb') )
+    mech.get( "minimal.primer" ).should == "testval"
+  end
+  
+  it "should successfully execute before clauses" do
+    
+    storage = SadieStorageManager.new
+    mech = SadieStorageMechanismMemory.new
+    storage.register_storage_mechanism :memory, mech
+    p = Primer.new( :storage_manager => storage )
+    def p.get_r
+      @r
+    end
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_before.rb') )
+    mech.get( "test.var1" ).should == "val1"
+    mech.get( "test.var2" ).should == "val2"
+    r= p.get_r
+    r.has_key?("test.var1").should be_true
+    r.has_key?("test.var2").should be_true
+    r["test.var1"].should == 1
+    r["test.var2"].should == 1
+  end
+  
 end
