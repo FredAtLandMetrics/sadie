@@ -33,11 +33,4 @@ describe Primer do
     mech.get( "minimal.primer" ).should == "testval"
   end
   
-#   it "should properly assign a value" do
-#     
-#     p = Primer.new
-#     p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'minimal.rb') )
-#     
-#   end
-  
 end
