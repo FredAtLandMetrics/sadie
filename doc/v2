@@ -1,0 +1,225 @@
+So, now that Sadie's been written and reasonably well tested, I'd like to see it change to something more ruby-esque.
+
+I liked the idea of pluggable types, but I want to add RESTful services and they're just not going to work, so I think I'll go with constructors/destructors as an alternative.
+
+I'm also going to move to the more rubyesque style of using method calls in primer definitions instead of parameters...it just looks better.
+
+So, where in the old version I've got a primer that looks like:
+
+  Sadie::prime( "provides" =>     %w{ toplevel_double.oneprime
+                                      toplevel_double.twoprime } ) do |sadie|
+      sadie.set( "toplevel_double.oneprime", "primedthem" )
+      sadie.set( "toplevel_double.twoprime", "primedthem" )
+  end
+
+and an eacher in a separate file that looks like:
+
+
+  Sadie::eacher( :when => Sadie::BEFORE   ) do |sadie|
+      @testeach_topleveldouble = "blah"
+      sadie.debug! 10, ">>>>HERE!!!"
+  end
+
+  Sadie::eacher( :when => Sadie::AFTER,
+                :provides => ["toplevel_double.eachtest"]   ) do |sadie,val|
+                
+      @testeach_topleveldouble = "#{@testeach_topleveldouble}bloo"
+      sadie.set "toplevel_double.eachtest", @testeach_topleveldouble 
+      sadie.debug! 10, ">>>>THERE!!!"
+      
+  end
+
+I'll now have a single file that looks like:
+
+  prime %w{ toplevel_double.oneprime toplevel_double.twoprime toplevel_double.eachtest } do
+
+    before :each do
+      @testeach_topleveldouble = "blah"
+    end
+    
+    after :each do |val|
+    
+      @testeach_topleveldouble = "#{@testeach_topleveldouble}bloo"
+      
+      assign "toplevel_double.eachtest" do
+        set @testeach_topleveldouble
+      end
+      
+    end
+    
+    assign "toplevel_double.oneprime" do
+      set "primedthem"
+    end
+    
+    assign "toplevel_double.twoprime" do
+      set "primedthem"
+    end
+    
+  end
+  
+But for a more interesting example of things to come:
+
+  prime %w{ shapefile.url } do
+  
+    expire   "shapefile.url",     :after => 300
+    depends_on     "gis.points.array"
+    
+    after "shapefile.url" do |value|
+      notify_admin_of_new_shapefile value
+    end
+    
+    assign "shapefile.url" do
+      output = generate_shapefile(get('gis.points.array'))
+      set "http://#{GISHOST}/shapefiles/#{output}"
+    end
+  
+  end
+  
+  prime %w{ webview.image.url } do
+  
+    expire :after => 30                                   # note that, if unspecified, expire applies to all names in prime array
+    depends_on     "gis.points.array"
+    
+    assign do                                             # note that, if unspecified, assign applies to all names in prime array
+      set build_webview_image(get('gis.points.array'))
+    end
+  
+  end
+  
+  prime %w{ gis.points.array } do
+  
+    expire "gis.points.array", :immediately
+    
+    assign "gis.points.array" do
+      set get_badguy_locations_from_drone
+    end
+  
+  end
+  
+What's happening here is we have a bit of continually refreshable data called gis.points.array that is new every time we retrieve it.  We're building an image using the gis points array for the web page that only changes every 60 seconds and we're building a new shapefile using the gis points array that only changes every 300 seconds.  No look at this:
+
+  prime %w{ shapefile.url } do
+  
+    expire   "shapefile.url",     :never
+    depends_on     "gis.points.array"
+    refresh :every => 300
+    
+    after "shapefile.url" do |value|
+      notify_admin_of_new_shapefile value
+    end
+    
+    assign "shapefile.url" do
+      output = generate_shapefile(get('gis.points.array'))
+      set "http://#{GISHOST}/shapefiles/#{output}"
+    end
+  
+  end
+  
+So, now, instead of being generated on demand, this becomes a background process via the refresh statement and a new shapefile will be generated every 300 seconds.
+
+Now, by default, when a sadie object is initialized, it exists in its own session.  So a primer that never expires will still run once for every session.  To get around that, use the 'context :global' directive.  Like this:
+
+  prime %w{ shapefile.url } do
+  
+    expire   "shapefile.url",     :never
+    depends_on     "gis.points.array"
+    refresh :every => 300
+    context :global
+    
+    after "shapefile.url" do |value|
+      notify_admin_of_new_shapefile value
+    end
+    
+    assign "shapefile.url" do
+      output = generate_shapefile(get('gis.points.array'))
+      set "http://#{GISHOST}/shapefiles/#{output}"
+    end
+  
+  end
+
+Now, all the sadie objects on the machine (that use the same config file anyway) will have access to the shapefile.url bit of data and it will only generate once, total, every 5 minutes, not once for every session for every five minutes.
+
+It should also be possible to set keys with sadie and have things happen before and after the setting, so this is perfectly acceptable:
+
+  prime %{ some.key } do
+    expire :never
+    context :global
+    
+    after do |value|
+      notify_some_guy value
+    end
+  end
+  
+Note that there's no assign...if you're expecting it to be set from an external call, it doesn't need it.
+
+It should also be possible to set defaults:
+
+  prime %{ some.key } do
+    expire :never
+    context :global
+    
+    after do |value|
+      notify_some_guy value
+    end
+    
+    default do
+      set "some_default_value"
+    end
+  end
+
+Note that setting something using default will not bother to call the before and after code blocks
+
+*** Index by key name such that a.b.c creates an entry in three indexes, a., b., and a.b.c.
+
+       this will facilitate an aggregate getter
+       
+*** Allow for a read-only query language that executes ruby code in safe mode level = 4 (and maybe runs in some sort of jailed process sandbox that only has access to the local sadie server via RESTful interface?)
+
+It should also be possible to expire when some other key is set, like:
+
+  prime %w{ shapefile.url } do
+  
+    expire   "shapefile.url",     :after => key_is_set("gis.points.array")
+    depends_on     "gis.points.array"
+    
+    after "shapefile.url" do |value|
+      notify_admin_of_new_shapefile value
+    end
+    
+    assign "shapefile.url" do
+      output = generate_shapefile(get('gis.points.array'))
+      set "http://#{GISHOST}/shapefiles/#{output}"
+    end
+  
+  end
+  
+It should also be possible to expire when a file on the filesystem has changed:
+
+  prime ["gis.points.list_string"] do
+    expire :after => file_has_changed("/var/gisdata/someguys_points_file.csv")
+    assign do
+      set "gis.points.list_string", File.open("/var/gisdata/someguys_points_file.csv", 'rb') { |f| f.read }
+    end
+  end
+  
+It should also be possible to have a system session, which is to be used internally
+
+  prime ["system.framework.dirpath"] do
+    expire :never
+    context :system # could be :session (which is the default) or :global
+    default do
+      set "/var/sadie"
+    end
+  end
+  
+It should be possible to choose the method of storage for an item
+
+  prime ["gis.points.list_string"] do
+    expire :after => file_has_changed("/var/gisdata/someguys_points_file.csv")
+    store_in :redis (or :memory, :file)
+    assign do
+      set "gis.points.list_string", File.open("/var/gisdata/someguys_points_file.csv", 'rb') { |f| f.read }
+    end
+  end
+
+  
