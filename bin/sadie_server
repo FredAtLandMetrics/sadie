@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+require 'sinatra'
+require 'server'
+
+server = SadieServer.new( SadieServer::proc_args( ARGV ) )
+
+get '/:key' do
+  server.get params[:key]
+end
+
+post '/:key' do
+  server.set params[:key], params[:value]
+end
+
+post '/setmultiple' do
+  server.set_multiple params[:data]
+end
+
+post '/getmultiple' do
+  server.set_multiple params[:keys]
+end
+
+post '/query' do
+  server.query params[:query]
+end
+

@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+
+require 'sinatra'
+require 'sadie_server'
+
+get '/:key' do
+  sadie_server_get params[:key]
+end
+
+post '/:key' do
+  sadie_server_set params[:key], params[:value]
+end
+
+post '/query' do
+  sadie_server_query params[:query]
+end
+

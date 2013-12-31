@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'sinatra'
+require 'sadie_server'
+
+sadie_server_proc_args ARGV
+
+get '/:key' do
+  sadie_server_get params[:key]
+end
+
+post '/query' do
+  sadie_server_query params[:query]
+end
+
