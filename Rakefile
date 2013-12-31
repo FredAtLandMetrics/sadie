@@ -11,6 +11,31 @@ task :test do
     ruby "test/tc_sadie_twodeep.rb"
 end
 
+namespace :spec do
+  
+  desc "test sadie server library"
+  task :sadie_server_lib do
+    system "rspec spec/sadie_server_lib.rb"
+  end
+  
+  namespace :storage_mechanism do
+    desc "test the memory based storage mechanism"
+    task :memory do
+      system "rspec spec/storage_mechanisms/memory.rb"
+    end
+  end
+  
+  desc "test primer"
+  task :primer do
+    system "rspec spec/primer.rb"
+  end
+  
+  desc "test storage manager"
+  task :storage_manager do
+    system "rspec spec/storage_manager.rb"
+  end
+end
+
 # increment version
 task :deploy => 'inc_version' do
     version = current_sadie_version
