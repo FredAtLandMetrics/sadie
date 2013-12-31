@@ -25,3 +25,4 @@
 [0.0.50] fixed isset? bug (was only working for non-expensive keys)
 [0.0.51] eacher bugfix. now correctly handles specific keys.
 [0.0.52] code cleanup
+[0.1.01] ** ground-up rewrite, ignore everything before this line if you're not a historian **

@@ -1,34 +1,13 @@
 ==About Sadie
 
-Sadie is a general-purpose data server written in Ruby and it's intended to be used by a Rubie developer to simplify access to inter-related data sets.
+Sadie is a general-purpose data server written in Ruby and it's intended to be used by developers to simplify access to inter-related data sets.
 
-It is designed to provide handle-based access to data of all types, much like a simple hash.  Unlike a hash, a sadie instance is created with a pathname which points to a directory of primers which tell sadie how to determine what the value of a given hash key should be, but values are not assigned until the hash keys are requested.  In this way, only necessary data transformations and/or accesses are performed.
+It is designed to provide handle-based access to data of all types, much like a simple hash.
 
-Valid primers currently are:
-
-  .ini - provide access to section, key, value data in ini-style-files
-  .dbi.conx - simple access to database handles
-  .sql2ar - simple access to database data
-  .res, .res.rb - provides access to general-purpose, programatic manipulation of data (i.e. just use sadie instance for input and output of data)
-  .tmpl - simple templating engine for text-based file types
-
-There's also another file type that can be found in the primer directory called "eacher files".  These are simple files which allow for certain tasks to be performed before, after and during the priming of a key/value pair.  Currently, the only plugin that makes effective use of eachers is sql2ar and it provides a way for developers to iterate on the rows of a query result as it is initially processed into the resultant array.
-  
-It's very simple to add new primer types, so it would be simple to create primers for html, xml, csv, xls, pointers to all of the above on remote machines, or any- and everything else.
-
-At Landmetrics, we use a predecessor to Sadie to power perimetercomps[http://perimetercomps.com], producing each 50+ page report with charts, graphs and tables with only 12 queries to the database.
+It runs as a daemon and can be communicated with via a RESTful interface.
 
 Sadie can be downloaded via its rubygems page[https://rubygems.org/gems/sadie] or from github[https://github.com/FredAtLandMetrics/sadie].
 
 USE CASES
 
-[templating]    As noted above, perimetercomps[http://perimetercomps.com] is an example of how one might
-                use sadie to to create a templating engine wherein many pieces of related information
-                from many different sources are made into charts, graphs, tables and text before being
-                assembled into a single deliverable document.  We used LaTeX, but html, xml, css, txt, etc.
-                would be just as easy.
-
-[data import]   Tasks involving grabbing data from different places in different formats and
-                massaging the data into a consistent and useful format.  A few simple primer plugins
-                would make this very easy.
-                
+[data harvesting]    This is what Sadie was written for.
