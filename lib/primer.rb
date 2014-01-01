@@ -5,6 +5,7 @@ class Primer
   def initialize( params=nil )
     self.storage_mechanism = :memory
     @before_block = {}
+    @after_block = {}
     unless params.nil?
       if params.is_a? Hash
         if params.has_key?( :storage_manager )
@@ -32,6 +33,20 @@ class Primer
         raise 'key passed as argument to before must be declared in the prime directive'
       else
         @before_block[arg] = block
+      end
+    end
+  end
+  
+  def after( arg, &block )
+    if arg == :each
+      if block_given?
+        @after_block[:each] = block
+      end
+    elsif arg.is_a? String
+      if self.keys.index( arg ).nil?
+        raise 'key passed as argument to after must be declared in the prime directive'
+      else
+        @after_block[arg] = block
       end
     end
   end
@@ -98,6 +113,22 @@ class Primer
         :keys => Array(keys),
         :value => value
       )
+      
+      if @after_block.has_key?(:each) && ! @after_block[:each].nil?
+        
+        Array(keys).each do |key|
+          @after_block[:each].call(key,value)
+        end
+        
+      end
+      
+      Array(keys).each do |key|
+        if @after_block.has_key?(key) && ! @after_block[key].nil?
+          
+          @after_block[key].call(key,value)
+          
+        end
+      end
     end
   end
   
@@ -121,6 +152,21 @@ class Primer
       :keys => self.assign_keys,
       :value => value
     )
+    if @after_block.has_key?(:each) && ! @after_block[:each].nil?
+      
+      Array(keys).each do |key|
+        @after_block[:each].call(key,value)
+      end
+      
+    end
+    
+    Array(keys).each do |key|
+      if @after_block.has_key?(key) && ! @after_block[key].nil?
+        
+        @after_block[key].call(key,value)
+        
+      end
+    end
   end
   
   def _validate_key_arg( k=nil )

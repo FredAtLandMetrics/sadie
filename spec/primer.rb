@@ -138,4 +138,42 @@ describe Primer do
     r["test.var1"].should == 1
   end
   
+  it "should successfully execute after each clauses" do
+    
+    storage = SadieStorageManager.new
+    mech = SadieStorageMechanismMemory.new
+    storage.register_storage_mechanism :memory, mech
+    p = Primer.new( :storage_manager => storage )
+    def p.get_r
+      @r
+    end
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_after_each.rb') )
+    mech.get( "test.var1" ).should == "val1"
+    mech.get( "test.var2" ).should == "val2"
+    r= p.get_r
+    r.has_key?("test.var1").should be_true
+    r.has_key?("test.var2").should be_true
+    r["test.var1"].should == "val1"
+    r["test.var2"].should == "val2"
+  end
+  
+  it "should successfully execute after key clauses" do
+    
+    storage = SadieStorageManager.new
+    mech = SadieStorageMechanismMemory.new
+    storage.register_storage_mechanism :memory, mech
+    p = Primer.new( :storage_manager => storage )
+    def p.get_r
+      @r
+    end
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_after_key.rb') )
+    mech.get( "test.var1" ).should == "val1"
+    mech.get( "test.var2" ).should == "val2"
+    r= p.get_r
+    r.has_key?("test.var1").should be_true
+    r.has_key?("test.var2").should be_false
+    r["test.var1"].should == "val1"
+  end
+  
+  
 end
