@@ -8,18 +8,21 @@ class SadieSession
   attr_accessor :primers_dirpath
   
   def initialize( params )
-    @storage_manager_thread_mutex = Mutex.new
+    
     @expiry_mutex = Mutex.new
     @expire_schedule = MultiRBTree.new
     @expiry_thread = Thread.new do
       _expiry_loop
     end
+    
     @refresh_mutex = Mutex.new
     @refresh_schedule = MultiRBTree.new
     @refresh_thread = Thread.new do
       _refresh_loop
     end
+    
     @registered_key = {}
+    
     unless params.nil?
       if params.is_a? Hash
         if params.has_key?( :primers_dirpath )
@@ -28,9 +31,10 @@ class SadieSession
         end
       end
     end
+    
+    @storage_manager_thread_mutex = Mutex.new
     @storage_manager = SadieStorageManager.new
     @storage_manager_thread_mutex.synchronize do
-
       @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
     end
   end
@@ -64,7 +68,7 @@ class SadieSession
                             :value => value,
                             :mechanism => mechanism )
     end
-    manage_expiry( keys, expires ) unless expires == :never || expires == :on_get
+    _manage_expiry( keys, expires ) unless expires == :never || expires == :on_get
   end
   
   def get( key )
@@ -78,7 +82,7 @@ class SadieSession
         @storage_manager.unset( key )
         ret
       elsif ( p.refreshes? )
-        manage_refresh( key, p.refresh_rate )
+        _manage_refresh( key, p.refresh_rate )
         @storage_manager.get( key )
       else
         @storage_manager.get( key )
@@ -86,7 +90,9 @@ class SadieSession
     end
   end
   
-  def manage_expiry( keys, expires_seconds )
+  private
+  
+  def _manage_expiry( keys, expires_seconds )
     if ! expires_seconds.is_a?( Symbol ) && expires_seconds.to_i > 0
       expires = expires_seconds.to_i + _current_time
       unless Array(keys).empty?
@@ -99,7 +105,7 @@ class SadieSession
     end
   end
   
-  def manage_refresh( keys, refresh_seconds )
+  def _manage_refresh( keys, refresh_seconds )
     if ! refresh_seconds.is_a?( Symbol ) && refresh_seconds.to_i > 0
       refreshes = refresh_seconds.to_i + _current_time
       unless Array(keys).empty?
@@ -111,8 +117,6 @@ class SadieSession
       end
     end
   end
-  
-  private
   
   def _register_primers
     Dir.glob( File.join( self.primers_dirpath, "**", "*.rb" ) ).each do |primer_filepath|
@@ -180,7 +184,7 @@ class SadieSession
   def _refresh( key )
     p = Primer.new( :session => self )
     p.decorate( @registered_key[ key ] )
-    manage_refresh( key, p.refresh_rate )
+    _manage_refresh( key, p.refresh_rate )
   end
   
   def _current_time
