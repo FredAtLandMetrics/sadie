@@ -62,7 +62,6 @@ But for a more interesting example of things to come:
   prime %w{ shapefile.url } do
   
     expire   "shapefile.url",     :after => 300
-    depends_on     "gis.points.array"
     
     after "shapefile.url" do |value|
       notify_admin_of_new_shapefile value
@@ -78,7 +77,6 @@ But for a more interesting example of things to come:
   prime %w{ webview.image.url } do
   
     expire :after => 30                                   # note that, if unspecified, expire applies to all names in prime array
-    depends_on     "gis.points.array"
     
     assign do                                             # note that, if unspecified, assign applies to all names in prime array
       set build_webview_image(get('gis.points.array'))
@@ -101,7 +99,6 @@ What's happening here is we have a bit of continually refreshable data called gi
   prime %w{ shapefile.url } do
   
     expire   "shapefile.url",     :never
-    depends_on     "gis.points.array"
     refresh :every => 300
     
     after "shapefile.url" do |value|
@@ -122,7 +119,6 @@ Now, by default, when a sadie object is initialized, it exists in its own sessio
   prime %w{ shapefile.url } do
   
     expire   "shapefile.url",     :never
-    depends_on     "gis.points.array"
     refresh :every => 300
     context :global
     
@@ -180,7 +176,6 @@ It should also be possible to expire when some other key is set, like:
   prime %w{ shapefile.url } do
   
     expire   "shapefile.url",     :after => key_is_set("gis.points.array")
-    depends_on     "gis.points.array"
     
     after "shapefile.url" do |value|
       notify_admin_of_new_shapefile value
