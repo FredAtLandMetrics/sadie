@@ -99,7 +99,7 @@ What's happening here is we have a bit of continually refreshable data called gi
   prime %w{ shapefile.url } do
   
     expire   "shapefile.url",     :never
-    refresh :every => 300
+    refresh 300
     
     after "shapefile.url" do |value|
       notify_admin_of_new_shapefile value
@@ -119,7 +119,7 @@ Now, by default, when a sadie object is initialized, it exists in its own sessio
   prime %w{ shapefile.url } do
   
     expire   "shapefile.url",     :never
-    refresh :every => 300
+    refresh 300
     context :global
     
     after "shapefile.url" do |value|
@@ -194,16 +194,6 @@ It should also be possible to expire when a file on the filesystem has changed:
     expire :after => file_has_changed("/var/gisdata/someguys_points_file.csv")
     assign do
       set "gis.points.list_string", File.open("/var/gisdata/someguys_points_file.csv", 'rb') { |f| f.read }
-    end
-  end
-  
-It should also be possible to have a system session, which is to be used internally
-
-  prime ["system.framework.dirpath"] do
-    expire :never
-    context :system # could be :session (which is the default) or :global
-    default do
-      set "/var/sadie"
     end
   end
   
