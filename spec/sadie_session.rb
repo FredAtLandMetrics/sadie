@@ -75,6 +75,7 @@ describe SadieSession do
   
   # --- SLOW!
   if ENV.has_key?('SADIE_SESSION_TEST_TIMERS') && ENV['SADIE_SESSION_TEST_TIMERS'].to_i == 1
+    
     it "should expire keys after specified time" do
       
       session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
@@ -83,6 +84,15 @@ describe SadieSession do
       sleep 2
       session.has_key?("test.expires.nsecs").should be_false
     end
+    
+    it "should refresh keys after specified time" do
+      
+      session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+      session.get("test.refresh").should == "refresh"
+      sleep 2
+      session.get("test.refresh").should == "rrefresh"
+    end
+    
   end
   
 
