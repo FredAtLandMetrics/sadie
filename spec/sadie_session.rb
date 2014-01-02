@@ -29,6 +29,12 @@ describe SadieSession do
     session.get("subdir.test").should == "testval"
   end
   
+  it "should be possible to expire on get" do
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    session.get("test.expires.onget").should == "testval"
+    session.has_key?("test.expires.onget").should be_false
+  end
+  
 #   it "should read primers in subdirectories" do
 #   end
   

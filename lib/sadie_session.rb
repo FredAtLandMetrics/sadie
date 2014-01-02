@@ -47,7 +47,13 @@ class SadieSession
     elsif primer_registered?( key )
       p = Primer.new( :storage_manager => @storage_manager )
       p.decorate( @registered_key[ key ] )
-      @storage_manager.get( key )
+      if p.expire == :on_get
+        ret = @storage_manager.get( key )
+        @storage_manager.unset( key )
+        ret
+      else
+        @storage_manager.get( key )
+      end
     end
   end
   

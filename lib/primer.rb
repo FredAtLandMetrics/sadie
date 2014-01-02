@@ -6,6 +6,7 @@ class Primer
     self.storage_mechanism = :memory
     @before_block = {}
     @after_block = {}
+    expire(:never)
     unless params.nil?
       if params.is_a? Hash
         if params.has_key?( :storage_manager )
@@ -13,6 +14,13 @@ class Primer
         end
       end      
     end
+  end
+  
+  def expire( val=nil )
+    unless val.nil?
+      @expire = val
+    end
+    @expire
   end
   
   def decorate( primer_filepath )
