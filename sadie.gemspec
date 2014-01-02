@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   #s.add_runtime_dependency "mysql2"
   #s.add_runtime_dependency "dbd-mysql"
   s.add_runtime_dependency "sinatra", "~> 1.4.4"
+  s.add_runtime_dependency "rbtree", "~> 0.4.2"
   s.add_development_dependency "rspec"
   s.extra_rdoc_files = ['README', 'CHANGELOG', 'TODO']
 end
