@@ -1,11 +1,15 @@
 require 'sadie_storage_manager'
 require 'storage_mechanisms/memory'
 require 'primer'
+require 'thread'
+require 'rbtree'
 
 class SadieSession
   attr_accessor :primers_dirpath
   
   def initialize( params )
+    @storage_manager_thread_mutex = Mutex.new
+    @expire_schedule = MultiRBTree.new
     @registered_key = {}
     unless params.nil?
       if params.is_a? Hash
@@ -27,17 +31,25 @@ class SadieSession
     @registered_key.has_key? key
   end
   
+  def unset( key )
+    @storage_manager_thread_mutex.synchronize do
+      @storage_manager.unset( key )
+    end
+  end
+  
   def set( keys, value, params=nil )
     expires, mechanism = :never, :memory
     unless params.nil?
       if params.is_a? Hash
-        expires = params[:expires] if params.has_key?( :expires )
+        expires = params[:expire] if params.has_key?( :expire )
         mechanism = params[:mechanism] if params.has_key( :mechanism )
       end
     end
-    @storage_manager.set( :keys => Array( keys ),
-                          :value => value,
-                          :mechanism => mechanism )
+    @storage_manager_thread_mutex.synchronize do
+      @storage_manager.set( :keys => Array( keys ),
+                            :value => value,
+                            :mechanism => mechanism )
+    end
     manage_expiry( keys, expires ) unless expires == :never
   end
   
@@ -58,7 +70,13 @@ class SadieSession
   end
   
   def manage_expiry( keys, expires )
-    
+    if expires.to_i > 0
+      unless Array(keys).empty?
+        Array(keys).each do |key|
+          @expire_schedule[expires.to_1] = key
+        end
+      end
+    end
   end
   
   private
@@ -80,4 +98,25 @@ class SadieSession
     end
   end
   
+  def _expiry_loop
+    loop do
+      time_now_in_seconds = _current_time
+      
+      loop do
+        ts,key = @expire_schedule.shift
+        if ts < time_now_in_seconds
+          unset key
+        else
+          @expire_schedule[ts] = key
+          break
+        end
+      end
+      
+      sleep 1
+    end
+  end
+  
+  def _current_time
+    Time.now.to_i
+  end
 end
