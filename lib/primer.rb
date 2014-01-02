@@ -1,6 +1,6 @@
 class Primer
   
-  attr_accessor :keys, :mode, :storage_manager, :storage_mechanism, :assign_keys, :filepath
+  attr_accessor :keys, :mode, :session, :storage_mechanism, :assign_keys, :filepath
   
   def initialize( params=nil )
     self.storage_mechanism = :memory
@@ -9,8 +9,8 @@ class Primer
     expire(:never)
     unless params.nil?
       if params.is_a? Hash
-        if params.has_key?( :storage_manager )
-          self.storage_manager = params[:storage_manager]
+        if params.has_key?( :session )
+          self.session = params[:session]
         end
       end      
     end
@@ -117,11 +117,14 @@ class Primer
         end
       end
       
-      self.storage_manager.set(
-        :mechanism => self.storage_mechanism,
-        :keys => Array(keys),
-        :value => value
-      )
+#       self.storage_manager.set(
+#         :mechanism => self.storage_mechanism,
+#         :keys => Array(keys),
+#         :value => value
+#       )
+      
+      self.session.set( Array(keys), value, :mechanism => self.storage_mechanism,
+                                            :expire => self.expire                )
       
       if @after_block.has_key?(:each) && ! @after_block[:each].nil?
         
@@ -156,11 +159,15 @@ class Primer
         
       end
     end
-    self.storage_manager.set(
-      :mechanism => self.storage_mechanism,
-      :keys => self.assign_keys,
-      :value => value
-    )
+#     self.storage_manager.set(
+#       :mechanism => self.storage_mechanism,
+#       :keys => self.assign_keys,
+#       :value => value
+#     )
+    
+    self.session.set( Array(keys), value, :mechanism => self.storage_mechanism,
+                                          :expire => self.expire                )
+    
     if @after_block.has_key?(:each) && ! @after_block[:each].nil?
       
       Array(keys).each do |key|

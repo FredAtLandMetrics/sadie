@@ -42,7 +42,7 @@ class SadieSession
     unless params.nil?
       if params.is_a? Hash
         expires = params[:expire] if params.has_key?( :expire )
-        mechanism = params[:mechanism] if params.has_key( :mechanism )
+        mechanism = params[:mechanism] if params.has_key?( :mechanism )
       end
     end
     @storage_manager_thread_mutex.synchronize do
@@ -50,14 +50,14 @@ class SadieSession
                             :value => value,
                             :mechanism => mechanism )
     end
-    manage_expiry( keys, expires ) unless expires == :never
+    manage_expiry( keys, expires ) unless expires == :never || expires == :on_get
   end
   
   def get( key )
     if @storage_manager.has_key?( key )
       @storage_manager.get( key )
     elsif primer_registered?( key )
-      p = Primer.new( :storage_manager => @storage_manager )
+      p = Primer.new( :session => self )
       p.decorate( @registered_key[ key ] )
       if p.expire == :on_get
         ret = @storage_manager.get( key )
@@ -70,10 +70,11 @@ class SadieSession
   end
   
   def manage_expiry( keys, expires )
-    if expires.to_i > 0
+    
+    if ! expires.is_a?( Symbol ) && expires.to_i > 0
       unless Array(keys).empty?
         Array(keys).each do |key|
-          @expire_schedule[expires.to_1] = key
+          @expire_schedule[expires.to_i] = key
         end
       end
     end
@@ -83,7 +84,7 @@ class SadieSession
   
   def _register_primers
     Dir.glob( File.join( self.primers_dirpath, "**", "*.rb" ) ).each do |primer_filepath|
-      p = Primer.new( :storage_manager => @storage_manager )
+      p = Primer.new( :session => self )
       p.mode = :registration
       p.decorate( primer_filepath )
       _register_keys p.keys, primer_filepath
