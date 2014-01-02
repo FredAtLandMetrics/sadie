@@ -34,6 +34,11 @@ namespace :spec do
   task :storage_manager do
     system "rspec spec/storage_manager.rb"
   end
+  
+  desc "test session"
+  task :session do
+    system "rspec spec/sadie_session.rb"
+  end
 end
 
 # increment version

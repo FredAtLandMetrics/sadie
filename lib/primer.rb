@@ -1,6 +1,6 @@
 class Primer
   
-  attr_accessor :keys, :mode, :storage_manager, :storage_mechanism, :assign_keys
+  attr_accessor :keys, :mode, :storage_manager, :storage_mechanism, :assign_keys, :filepath
   
   def initialize( params=nil )
     self.storage_mechanism = :memory
@@ -18,6 +18,7 @@ class Primer
   def decorate( primer_filepath )
     if File.exists?( primer_filepath )
       self.instance_eval File.open(primer_filepath, 'rb') { |f| f.read } 
+      self.filepath = primer_filepath
     else
       raise ArgumentError, "#{primer_filepath} not found"
     end
