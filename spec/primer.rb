@@ -157,5 +157,11 @@ describe Primer do
     r["test.var1"].should == "val1"
   end
   
+  it "should set the refresh rate" do
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    p = Primer.new( :session => session )
+    p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_refresh.rb') )
+    p.refresh_rate.should == 2
+  end
   
 end

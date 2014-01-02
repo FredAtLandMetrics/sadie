@@ -39,6 +39,11 @@ namespace :spec do
   task :session do
     system "rspec spec/sadie_session.rb"
   end
+  
+  desc "test session with timers (slow)"
+  task :session_with_timers do
+    system "SADIE_SESSION_TEST_TIMERS=1 rspec spec/sadie_session.rb"
+  end
 end
 
 # increment version

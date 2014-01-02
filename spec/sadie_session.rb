@@ -60,13 +60,30 @@ describe SadieSession do
     session.has_key?("test.expires.nsecs").should be_false
   end
   
-  it "should expire keys after specified time" do
+  it "should refresh keys" do
     
     session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
-    session.get("test.expires.nsecs").should == "testval"
-    session.has_key?("test.expires.nsecs").should be_true
-    sleep 2
-    session.has_key?("test.expires.nsecs").should be_false
+    def session.run_refresh_pass
+      _refresh_pass
+    end
+    session.stub(:_current_time).and_return(2,5,8,11,14)
+    session.stub(:_refresh_loop).and_return(false)
+    session.get("test.refresh").should == "refresh"
+    session.run_refresh_pass
+    session.get("test.refresh").should == "rrefresh"
   end
+  
+  # --- SLOW!
+  if ENV.has_key?('SADIE_SESSION_TEST_TIMERS') && ENV['SADIE_SESSION_TEST_TIMERS'].to_i == 1
+    it "should expire keys after specified time" do
+      
+      session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+      session.get("test.expires.nsecs").should == "testval"
+      session.has_key?("test.expires.nsecs").should be_true
+      sleep 2
+      session.has_key?("test.expires.nsecs").should be_false
+    end
+  end
+  
 
 end

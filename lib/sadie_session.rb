@@ -14,6 +14,11 @@ class SadieSession
     @expiry_thread = Thread.new do
       _expiry_loop
     end
+    @refresh_mutex = Mutex.new
+    @refresh_schedule = MultiRBTree.new
+    @refresh_thread = Thread.new do
+      _refresh_loop
+    end
     @registered_key = {}
     unless params.nil?
       if params.is_a? Hash
@@ -72,6 +77,9 @@ class SadieSession
         ret = @storage_manager.get( key )
         @storage_manager.unset( key )
         ret
+      elsif ( p.refreshes? )
+        manage_refresh( key, p.refresh_rate )
+        @storage_manager.get( key )
       else
         @storage_manager.get( key )
       end
@@ -85,6 +93,19 @@ class SadieSession
         Array(keys).each do |key|
           @expiry_mutex.synchronize do
             @expire_schedule[expires] = key
+          end
+        end
+      end
+    end
+  end
+  
+  def manage_refresh( keys, refresh_seconds )
+    if ! refresh_seconds.is_a?( Symbol ) && refresh_seconds.to_i > 0
+      refreshes = refresh_seconds.to_i + _current_time
+      unless Array(keys).empty?
+        Array(keys).each do |key|
+          @refresh_mutex.synchronize do
+            @refresh_schedule[refreshes] = key
           end
         end
       end
@@ -131,6 +152,35 @@ class SadieSession
         end
       end
     end    
+  end
+  
+  def _refresh_loop
+    loop do
+      _refresh_pass
+      sleep 1
+    end
+  end
+  
+  def _refresh_pass
+    time_now_in_seconds = _current_time
+      loop do
+        break if @refresh_schedule.empty?
+        ts,key = @refresh_schedule.shift
+        if ts < time_now_in_seconds
+          _refresh key
+        else
+          @refresh_mutex.synchronize do
+            @refresh_schedule[ts] = key
+          end
+          break
+        end
+      end
+  end
+  
+  def _refresh( key )
+    p = Primer.new( :session => self )
+    p.decorate( @registered_key[ key ] )
+    manage_refresh( key, p.refresh_rate )
   end
   
   def _current_time

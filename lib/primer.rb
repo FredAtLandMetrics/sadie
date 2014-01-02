@@ -1,9 +1,10 @@
 class Primer
   
-  attr_accessor :keys, :mode, :session, :storage_mechanism, :assign_keys, :filepath
+  attr_accessor :keys, :mode, :session, :storage_mechanism, :assign_keys, :filepath, :refresh_rate
   
   def initialize( params=nil )
     self.storage_mechanism = :memory
+    self.refresh_rate = nil
     @before_block = {}
     @after_block = {}
     expire(:never)
@@ -14,6 +15,14 @@ class Primer
         end
       end      
     end
+  end
+  
+  def refresh( rsecs )
+    self.refresh_rate = rsecs
+  end
+  
+  def refreshes?
+    ( ! refresh_rate.nil? )
   end
   
   def expire( val=nil )
