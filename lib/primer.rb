@@ -117,12 +117,6 @@ class Primer
         end
       end
       
-#       self.storage_manager.set(
-#         :mechanism => self.storage_mechanism,
-#         :keys => Array(keys),
-#         :value => value
-#       )
-      
       self.session.set( Array(keys), value, :mechanism => self.storage_mechanism,
                                             :expire => self.expire                )
       
@@ -159,11 +153,6 @@ class Primer
         
       end
     end
-#     self.storage_manager.set(
-#       :mechanism => self.storage_mechanism,
-#       :keys => self.assign_keys,
-#       :value => value
-#     )
     
     self.session.set( Array(keys), value, :mechanism => self.storage_mechanism,
                                           :expire => self.expire                )

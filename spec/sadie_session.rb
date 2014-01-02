@@ -35,7 +35,38 @@ describe SadieSession do
     session.has_key?("test.expires.onget").should be_false
   end
   
-#   it "should read primers in subdirectories" do
-#   end
+  it "should put keys in the expire schedule" do
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    
+    def session.in_expire_schedule?( key )
+      ( ! @expire_schedule.values.index(key).nil? )
+    end
+    
+    session.get("test.expires.nsecs").should == "testval"
+    session.in_expire_schedule?("test.expires.nsecs").should be true
+  end
   
+  it "should expire keys using _expire_pass" do
+    
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    def session.run_expiry_pass
+      _expiry_pass
+    end
+    session.stub(:_current_time).and_return(2,5,8,11,14)
+    session.stub(:_expiry_loop).and_return(false)
+    session.get("test.expires.nsecs").should == "testval"
+    session.has_key?("test.expires.nsecs").should be_true
+    session.run_expiry_pass
+    session.has_key?("test.expires.nsecs").should be_false
+  end
+  
+  it "should expire keys after specified time" do
+    
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    session.get("test.expires.nsecs").should == "testval"
+    session.has_key?("test.expires.nsecs").should be_true
+    sleep 2
+    session.has_key?("test.expires.nsecs").should be_false
+  end
+
 end

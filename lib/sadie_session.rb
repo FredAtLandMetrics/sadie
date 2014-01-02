@@ -9,7 +9,11 @@ class SadieSession
   
   def initialize( params )
     @storage_manager_thread_mutex = Mutex.new
+    @expiry_mutex = Mutex.new
     @expire_schedule = MultiRBTree.new
+    @expiry_thread = Thread.new do
+      _expiry_loop
+    end
     @registered_key = {}
     unless params.nil?
       if params.is_a? Hash
@@ -20,11 +24,16 @@ class SadieSession
       end
     end
     @storage_manager = SadieStorageManager.new
-    @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
+    @storage_manager_thread_mutex.synchronize do
+
+      @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
+    end
   end
   
   def has_key?( key )
-    @storage_manager.has_key?( key )
+    @storage_manager_thread_mutex.synchronize do
+      @storage_manager.has_key?( key )
+    end
   end
   
   def primer_registered?( key )
@@ -69,12 +78,14 @@ class SadieSession
     end
   end
   
-  def manage_expiry( keys, expires )
-    
-    if ! expires.is_a?( Symbol ) && expires.to_i > 0
+  def manage_expiry( keys, expires_seconds )
+    if ! expires_seconds.is_a?( Symbol ) && expires_seconds.to_i > 0
+      expires = expires_seconds.to_i + _current_time
       unless Array(keys).empty?
         Array(keys).each do |key|
-          @expire_schedule[expires.to_i] = key
+          @expiry_mutex.synchronize do
+            @expire_schedule[expires] = key
+          end
         end
       end
     end
@@ -101,9 +112,16 @@ class SadieSession
   
   def _expiry_loop
     loop do
-      time_now_in_seconds = _current_time
-      
+      _expiry_pass
+      sleep 1
+    end
+  end
+  
+  def _expiry_pass
+    time_now_in_seconds = _current_time
+    @expiry_mutex.synchronize do
       loop do
+        break if @expire_schedule.empty?
         ts,key = @expire_schedule.shift
         if ts < time_now_in_seconds
           unset key
@@ -112,9 +130,7 @@ class SadieSession
           break
         end
       end
-      
-      sleep 1
-    end
+    end    
   end
   
   def _current_time
