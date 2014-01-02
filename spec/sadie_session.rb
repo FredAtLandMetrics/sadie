@@ -24,6 +24,11 @@ describe SadieSession do
     session.get("minimal.primer").should == "testval"    
   end
   
+  it "should find primers in subdirectories" do
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    session.get("subdir.test").should == "testval"
+  end
+  
 #   it "should read primers in subdirectories" do
 #   end
   
