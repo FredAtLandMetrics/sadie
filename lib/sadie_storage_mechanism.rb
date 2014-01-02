@@ -3,11 +3,15 @@ class SadieStorageMechanism
   def initialize
   end
   
-  def set
+  def set( key, value )
     false
   end
   
-  def get
+  def get( key )
+    nil
+  end
+  
+  def unset( key )
     nil
   end
   
