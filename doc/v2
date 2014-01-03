@@ -114,45 +114,10 @@ What's happening here is we have a bit of continually refreshable data called gi
   
 So, now, instead of being generated on demand, this becomes a background process via the refresh statement and a new shapefile will be generated every 300 seconds.
 
-Now, by default, when a sadie object is initialized, it exists in its own session.  So a primer that never expires will still run once for every session.  To get around that, use the 'context :global' directive.  Like this:
-
-  prime %w{ shapefile.url } do
-  
-    expire   "shapefile.url",     :never
-    refresh 300
-    context :global
-    
-    after "shapefile.url" do |value|
-      notify_admin_of_new_shapefile value
-    end
-    
-    assign "shapefile.url" do
-      output = generate_shapefile(get('gis.points.array'))
-      set "http://#{GISHOST}/shapefiles/#{output}"
-    end
-  
-  end
-
-Now, all the sadie objects on the machine (that use the same config file anyway) will have access to the shapefile.url bit of data and it will only generate once, total, every 5 minutes, not once for every session for every five minutes.
-
-It should also be possible to set keys with sadie and have things happen before and after the setting, so this is perfectly acceptable:
-
-  prime %{ some.key } do
-    expire :never
-    context :global
-    
-    after do |value|
-      notify_some_guy value
-    end
-  end
-  
-Note that there's no assign...if you're expecting it to be set from an external call, it doesn't need it.
-
 It should also be possible to set defaults:
 
   prime %{ some.key } do
     expire :never
-    context :global
     
     after do |value|
       notify_some_guy value
