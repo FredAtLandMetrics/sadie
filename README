@@ -1,13 +1,38 @@
 ==About Sadie
 
-Sadie is a general-purpose data server written in Ruby and it's intended to be used by developers to simplify access to inter-related data sets.
+Sadie is a general-purpose data server written in Ruby for other Rubyists.
 
-It is designed to provide handle-based access to data of all types, much like a simple hash.
+==Purpose
+Imagine you work in the IT department of a cell phone company and your boss asks you to design a system that will:
+  * build a status page that shows a map with the operational status of all the cell towers and, for each one, the distance to the nearest field technician
+  * generate a shapefile and a spreadsheet of the same data that will be available and up-to-date on the company's intranet, 24/7
+  * when there's an outtage, send an SMS alert to the nearest field tech to the tower with the problem
 
-It runs as a daemon and can be communicated with via a RESTful interface.
+This is all inter-related data and, for a developer, it's not all that difficult to start thinking about how to approach these problems.
 
+With that said, if your boss a week later decides that he also needs to have google map imagery on the alert page and charts showing tower availability over time and average response time of technicians over the past several weeks, then things get a little more complicated.
+
+And if two weeks after that, he says he needs the technician availability data updated every ten minutes and the cell tower availability every five minutes, and, oh, the number of calls that come into customer care regarding a each tower's primary coverage area, it gets tough to imagine that the initial software engineering effort will have been robust enough to keep things sane.
+
+This is the sort of problem that Sadie is intended to address.
+
+==How it works
+Sadie is a key/value store that uses <em>primers</em>--which are really just ruby files written using Sadie's primer DSL--to set the key/value pairs.  These primers can be called on-demand (so no computational resources get expended until a request for a value is made) or they can be refreshed at certain intervals.
+
+For data that changes often, it's possible to expire data after a set amount of time or, if necessary, just after it's accessed for a just-in-time computation.
+
+Primers can also reference other primers so it's easy to hide complexity.
+
+==Future versions
+Future version of Sadie will:
+  * index on key string patterns
+  * make use of a redis storage mechanism to become scalable and distributed
+
+==Where to get it
 Sadie can be downloaded via its rubygems page[https://rubygems.org/gems/sadie] or from github[https://github.com/FredAtLandMetrics/sadie].
 
-USE CASES
+==Support
+Feel free to email me at fred@landmetrics.com
 
-[data harvesting]    This is what Sadie was written for.
+==How to say thanks
+I accept thanks via email at fred@landmetrics.com.  Beer from afar and lucrative consulting gigs are also welcomed.

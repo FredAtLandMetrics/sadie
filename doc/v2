@@ -1,3 +1,5 @@
+BIG UGLY PLANNING DOC
+
 So, now that Sadie's been written and reasonably well tested, I'd like to see it change to something more ruby-esque.
 
 I liked the idea of pluggable types, but I want to add RESTful services and they're just not going to work, so I think I'll go with constructors/destructors as an alternative.
@@ -113,22 +115,6 @@ What's happening here is we have a bit of continually refreshable data called gi
   end
   
 So, now, instead of being generated on demand, this becomes a background process via the refresh statement and a new shapefile will be generated every 300 seconds.
-
-It should also be possible to set defaults:
-
-  prime %{ some.key } do
-    expire :never
-    
-    after do |value|
-      notify_some_guy value
-    end
-    
-    default do
-      set "some_default_value"
-    end
-  end
-
-Note that setting something using default will not bother to call the before and after code blocks
 
 *** Index by key name such that a.b.c creates an entry in three indexes, a., b., and a.b.c.
 
