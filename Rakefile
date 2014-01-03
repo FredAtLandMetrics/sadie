@@ -52,6 +52,7 @@ namespace :spec do
 end
 
 # increment version
+desc "deploy a new gem"
 task :deploy => 'inc_version' do
     version = current_sadie_version
     sh "gem build sadie.gemspec"
