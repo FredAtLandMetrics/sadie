@@ -23,6 +23,56 @@ For data that changes often, it's possible to expire data after a set amount of 
 
 Primers can also reference other primers so it's easy to hide complexity.
 
+==How to use it
+Create a directory for sadie to operate in, say /var/sadie.
+
+Then create a directory in that called primers.  <em>So, now there's a /var/sadie/primers</em>
+
+In the primers directory, create files that end in .rb that look like:
+
+  require 'intersting_lib_that_does_neato_things'
+  require 'cool_notifier'
+  
+  prime ["test.expires.nsecs"] do
+  
+    expire :never
+    refresh 300 #generate this again every 5 minutes
+    
+    after "test.expires.nsecs" do |key, val|
+      cool_notify 'ward@thecleavers.com', val
+    end
+    
+    assign do
+    
+      someothervar = session.get( "some.other.var" )
+      andanother = session.get( "yet.another.var" )
+      
+      neat_val = awesome_whatzit( someothervar, andanother )
+      
+      set neat_val
+    end
+  end
+
+Have a look at other primers in test/v2/test_installation/primers for more information.
+
+Now run the sadie server on whatever directory you set it up on:
+
+  bin/sadie_server.rb --framework-dirpath=/var/sadie
+  
+And you can make get requests on the keys,
+
+  wget http://localhost:4567/test.expires.nsecs -O /tmp/outputfile
+
+Or, you can use the sadie session in your Ruby code like this:
+
+  @sadie_session = SadieSession.new( :primers_dirpath => '/var/sadie/primers' )
+  puts "test.expires.nsecs: #{@sadie_session.get('test.expires.nsecs')}"
+ 
+That's it!
+
+==Contribute
+Do it!  The github url for Sadie is at: [https://github.com/FredAtLandMetrics/sadie]
+ 
 ==Future versions
 Future version of Sadie will:
   * index on key string patterns
