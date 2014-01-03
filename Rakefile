@@ -44,12 +44,16 @@ namespace :spec do
   task :session_with_timers do
     system "SADIE_SESSION_TEST_TIMERS=1 rspec spec/sadie_session.rb"
   end
+  
+  desc "test RESTful server"
+  task :server do
+    system "rspec spec/sadie_server.rb"
+  end
 end
 
 # increment version
 task :deploy => 'inc_version' do
     version = current_sadie_version
-    sh "git push"
     sh "gem build sadie.gemspec"
     sh "gem push sadie-#{version}.gem"
 end
