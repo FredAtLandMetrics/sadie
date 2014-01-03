@@ -1,5 +1,5 @@
 require 'sadie_storage_manager'
-require 'storage_mechanisms/memory'
+require 'storage/memory'
 require 'primer'
 require 'thread'
 require 'rbtree'
@@ -27,6 +27,7 @@ class SadieSession
       if params.is_a? Hash
         if params.has_key?( :primers_dirpath )
           self.primers_dirpath = params[:primers_dirpath]
+          puts "initializing session with primer dirpath: #{self.primers_dirpath}"
           _register_primers
         end
       end
