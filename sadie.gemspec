@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Sadie::VERSION
   s.authors     = ["Fred McDavid"]
   s.email       = ["fred@landmetrics.com"]
-  s.homepage    = "http://www.landmetrics.com/Sadie"
+  s.homepage    = "http://landmetrics.com/projects/sadie"
   s.summary     = %q{A gem that provides sadie, a data access framework}
   s.description = %q{Sadie is a data framework intended to ease the pain of managing related data.}
 
