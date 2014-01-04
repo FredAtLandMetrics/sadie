@@ -1,0 +1,7 @@
+===ActiveRecord/ActiveModel
+
+=Updating internal models based on github
+A great example would be to update activerecord and/or activemodel data representations based on changes in a git repo.  This could, in turn, fire off a series of tests that could 1) accept the changes and notify or 2) reject the changes, revert to earlier version and notify
+
+=Updating ActiveRecord database using internal models
+It would be handy to show how Sadie could augment a Rails site by using ActiveRecord models to update the database on which the Rails site depends.  Data mining would be an appropriate task to illustrate.
