@@ -169,3 +169,5 @@ expire and refresh should accept the same triggers, which should be pluggable an
 it should be possible to incorporate tests into the framework
 
 it should be possible to regularly run tests and make the output available as sadie data
+
+Right now, there's a refresh thread, an expiry thread, and the main thread, which essentially serves the get and set methods.  The set and unset methods are protected by the @storage_manager_thread_mutex such that the set and unset can never run at the same time and, similarly, only a single set or unset can be in operation at the same time.  And this is good.  But the next iteration will target a distributed deployment of cooperating sadie instances which share a redis server (or cluster) and a filesystem (possibly distributed via nfs or something similar) or an s3 bucket.  So, at this point, a simple mutex isn't really going to cut it.  I've found a redis-mutex gem that will be of some assistance.  But really what's needed is an abstraction on the locking mechanism...ideally even configurable to the point where I can sub in another in an initializer file...one that makes sense locally and in a distributed context.
