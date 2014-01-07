@@ -13,6 +13,9 @@ class Primer
         if params.has_key?( :session )
           self.session = params[:session]
         end
+        if params.has_key?( :default_storage_mechanism )
+          self.storage_mechanism = params[:default_storage_mechanism]
+        end
       end      
     end
   end

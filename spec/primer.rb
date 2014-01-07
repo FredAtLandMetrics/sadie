@@ -161,7 +161,21 @@ describe Primer do
     session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
     p = Primer.new( :session => session )
     p.decorate( File.join(File.dirname(__FILE__), '..', 'test', 'v2', 'test_installation', 'primers', 'test_refresh.rb') )
-    p.refresh_rate.should == 2
+    p.refresh_rate.should == 1
+  end
+  
+  it "should be possible to set the default storage mechanism" do
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    p1 = Primer.new( :session => session )
+    p2 = Primer.new( :session => session, :default_storage_mechanism => :file )
+    def p1.get_default_stormech
+      self.storage_mechanism
+    end
+    def p2.get_default_stormech
+      self.storage_mechanism
+    end
+    p1.get_default_stormech.should == :memory
+    p2.get_default_stormech.should == :file
   end
   
 end
