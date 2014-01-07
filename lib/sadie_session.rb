@@ -22,14 +22,22 @@ class SadieSession
     end
     
     @registered_key = {}
-    
+    @default_storage_mechanism = :memory
     unless params.nil?
       if params.is_a? Hash
+        
         if params.has_key?( :primers_dirpath )
           self.primers_dirpath = params[:primers_dirpath]
           puts "initializing session with primer dirpath: #{self.primers_dirpath}"
           _register_primers
         end
+        
+        if params.has_key?( :default_storage_mechanism )
+          
+          @default_storage_mechanism = params[:default_storage_mechanism]
+          
+        end
+        
       end
     end
     
@@ -57,7 +65,7 @@ class SadieSession
   end
   
   def set( keys, value, params=nil )
-    expires, mechanism = :never, :memory
+    expires, mechanism = :never, @default_storage_mechanism
     unless params.nil?
       if params.is_a? Hash
         expires = params[:expire] if params.has_key?( :expire )

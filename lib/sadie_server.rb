@@ -1,10 +1,12 @@
 require 'sadie_session'
+require 'yaml'
 
 class SadieServer
   
-  attr_accessor :framework_dirpath
-  def initialize( params )
+  attr_accessor :framework_dirpath, :default_storage_mechanism
+  def initialize( params=nil )
     self.framework_dirpath = "/var/sadie"
+    self.default_storage_mechanism = :memory
     unless params.nil?
       if params.is_a? Hash
         if params.has_key?( :framework_dirpath )
@@ -32,7 +34,25 @@ class SadieServer
 #   def get_multiple
 #   end
   
-  def self.proc_args( argv_param )
+  def _config_hash
+    
+    if @config_hash.nil?
+      @config_hash = YAML.load_file(File.join(self.framework_dirpath,'config','sadie.yml'))
+      
+      if @config_hash.is_a?( Hash )
+        if ( @config_hash.has_key?( 'storage' ) ) &&
+           ( @config_hash['storage'].is_a?( Hash ) ) &&
+           ( @config_hash['storage'].has_key?( 'default_storage_mechanism' ) )
+          @config_hash['storage']['default_storage_mechanism'] = @config_hash['storage']['default_storage_mechanism'].to_sym
+        end
+      end
+      
+    end
+    @config_hash
+    
+  end
+  
+  def self.proc_args( argv_param=nil )
     argv = argv_param.dup
     ARGV.clear
     ret = nil

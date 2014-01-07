@@ -73,6 +73,22 @@ describe SadieSession do
     session.get("test.refresh").should == "rrefresh"
   end
   
+  it "should set the default storage mechanism" do
+    session = SadieSession.new( :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ))
+    def session.get_default_storage_mechanism
+      @default_storage_mechanism
+    end
+    session.get_default_storage_mechanism.should == :memory
+    session2 = SadieSession.new(
+      :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ),
+      :default_storage_mechanism => :file)
+    def session2.get_default_storage_mechanism
+      @default_storage_mechanism
+    end
+    session2.get_default_storage_mechanism.should == :file
+  end
+  
+  
   # --- SLOW!
   if ENV.has_key?('SADIE_SESSION_TEST_TIMERS') && ENV['SADIE_SESSION_TEST_TIMERS'].to_i == 1
     
