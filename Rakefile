@@ -19,11 +19,15 @@ namespace :spec do
   end
   
   namespace :storage_mechanism do
-    desc "test the memory based storage mechanism"
+    desc "test the memory-based storage mechanism"
     task :memory do
       system "rspec spec/storage_mechanisms/memory.rb"
     end
-  end
+    desc "test the file-based storage mechanism"
+    task :file do
+      system "rspec spec/storage_mechanisms/file.rb"
+    end
+ end
   
   desc "test primer"
   task :primer do
