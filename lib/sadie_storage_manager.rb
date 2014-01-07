@@ -2,7 +2,6 @@ class SadieStorageManager
   
   def initialize
     @mechanisms = {}
-#     @known_keys = {}
   end
   
   def register_storage_mechanism( handle, mechanism )
@@ -56,16 +55,11 @@ class SadieStorageManager
             
               params[:keys].each do |key|
                 @mechanisms[params[:mechanism]].set( key, params[:value] )
-#                 @known_keys[key] = params[:mechanism]
               end
             end
-            
           end
-          
         end
-        
       end
-      
     end
   end
   
