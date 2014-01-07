@@ -2,7 +2,7 @@ class SadieStorageManager
   
   def initialize
     @mechanisms = {}
-    @known_keys = {}
+#     @known_keys = {}
   end
   
   def register_storage_mechanism( handle, mechanism )
@@ -10,23 +10,35 @@ class SadieStorageManager
   end
   
   def mechanism_is_registered?( mechanism_handle )
-    
     @mechanisms.has_key?( mechanism_handle )
-    
+  end
+  
+  def registered_mechanisms
+    @mechanisms.keys
+  end
+  
+  def where_key?( key )
+    ret = nil
+    registered_mechanisms.each do |mech|
+      if @mechanisms[mech].has_key?( key )
+        ret = mech
+        break
+      end
+    end
+    ret
   end
   
   def has_key?( key )
-    @known_keys.has_key?( key )
+    ( ! where_key?( key ).nil? )
   end
   
   def get( key )
-    @mechanisms[@known_keys[key]].get( key ) if has_key?( key )
+    @mechanisms[where_key?( key )].get( key ) if has_key?( key )
   end
   
   def unset( key )
     if has_key?( key )
-      @mechanisms[@known_keys[key]].unset( key )
-      @known_keys.delete key
+      @mechanisms[where_key?( key )].unset( key )
     end
   end
   
@@ -44,7 +56,7 @@ class SadieStorageManager
             
               params[:keys].each do |key|
                 @mechanisms[params[:mechanism]].set( key, params[:value] )
-                @known_keys[key] = params[:mechanism]
+#                 @known_keys[key] = params[:mechanism]
               end
             end
             
