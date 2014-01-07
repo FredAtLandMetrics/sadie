@@ -124,6 +124,18 @@ describe SadieSession do
     @session.detect_storage_mechanism('key2').should == :file
   end
   
+  it "should be possible for primer files to choose the storage mechanism" do
+    def @session.detect_storage_mechanism(key)
+      @storage_manager.where_key?( key )
+    end
+    val_mem = @session.get("minimal.primer")
+    val_file = @session.get("minimal.primer.file")
+    val_mem.should == "testval"
+    val_file.should == "testval_file"
+    @session.detect_storage_mechanism("minimal.primer").should == :memory
+    @session.detect_storage_mechanism("minimal.primer.file").should == :file
+  end
+  
   # --- SLOW!
   if ENV.has_key?('SADIE_SESSION_TEST_TIMERS') && ENV['SADIE_SESSION_TEST_TIMERS'].to_i == 1
     
