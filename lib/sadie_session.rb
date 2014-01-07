@@ -129,7 +129,8 @@ class SadieSession
   
   def _register_primers
     Dir.glob( File.join( self.primers_dirpath, "**", "*.rb" ) ).each do |primer_filepath|
-      p = Primer.new( :session => self )
+      p = Primer.new( :session => self,
+                      :default_storage_mechanism => @default_storage_mechanism )
       p.mode = :registration
       p.decorate( primer_filepath )
       _register_keys p.keys, primer_filepath
