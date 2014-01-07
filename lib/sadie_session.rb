@@ -1,5 +1,6 @@
 require 'sadie_storage_manager'
 require 'storage/memory'
+require 'storage/file'
 require 'primer'
 require 'thread'
 require 'rbtree'
@@ -23,6 +24,7 @@ class SadieSession
     
     @registered_key = {}
     @default_storage_mechanism = :memory
+    @file_storage_mechanism_dirpath = nil
     unless params.nil?
       if params.is_a? Hash
         
@@ -33,9 +35,11 @@ class SadieSession
         end
         
         if params.has_key?( :default_storage_mechanism )
-          
           @default_storage_mechanism = params[:default_storage_mechanism]
-          
+        end
+        
+        if params.has_key?( :file_storage_mechanism_dirpath )
+          @file_storage_mechanism_dirpath = params[:file_storage_mechanism_dirpath]
         end
         
       end
@@ -45,6 +49,7 @@ class SadieSession
     @storage_manager = SadieStorageManager.new
     @storage_manager_thread_mutex.synchronize do
       @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
+      @storage_manager.register_storage_mechanism :file, SadieStorageMechanismFile.new(:key_storage_dirpath => @file_storage_mechanism_dirpath)
     end
   end
   

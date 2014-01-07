@@ -1,12 +1,13 @@
 require 'sadie_storage_mechanism'
 class SadieStorageMechanismFile < SadieStorageMechanism
+  attr_accessor :key_storage_dirpath
   
   def initialize( params=nil )
-    @key_storage_dirpath = "/tmp/sadie-key-storage"
+    self.key_storage_dirpath = "/tmp/sadie-key-storage"
     unless params.nil?
       if params.is_a?( Hash )
-        if params.has_key? :key_storage_dirpath
-          @key_storage_dirpath = params[:key_storage_dirpath]
+        if params.has_key?( :key_storage_dirpath ) && ! params[:key_storage_dirpath].nil?
+          self.key_storage_dirpath = params[:key_storage_dirpath]
         end
       end
     end
@@ -34,10 +35,10 @@ class SadieStorageMechanismFile < SadieStorageMechanism
   end
   
   def _keyvalue_filepath(key)
-    File.join(@key_storage_dirpath,key)
+    File.join(self.key_storage_dirpath,key)
   end
   
   def _keystorage_directory_exists?
-    Dir.exists?( @key_storage_dirpath )
+    Dir.exists?( self.key_storage_dirpath )
   end
 end
