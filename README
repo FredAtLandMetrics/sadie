@@ -1,6 +1,6 @@
 ==About Sadie
 
-Sadie is a general-purpose data server written in Ruby for other Rubyists.
+Sadie is a general-purpose data server written in Ruby for other Rubyists.  It is designed to be fast, but also resource efficient, storing data in memory or, optionally and on a key-by-key basis, in disk-based storage.
 
 ==Purpose
 Imagine you work in the IT department of a cell phone company and your boss asks you to design a system that will:
@@ -23,6 +23,8 @@ For data that changes often, it's possible to expire data after a set amount of 
 
 Primers can also reference other primers so it's easy to hide complexity.
 
+For large, less frequently accessed data, it is possible to specfiy that the value be stored to disk instead of memory.
+
 ==How to use it
 Create a directory for sadie to operate in, say /var/sadie.
 
@@ -36,8 +38,8 @@ In the primers directory, create files that end in .rb that look like:
   prime ["test.expires.nsecs"] do
   
     expire :never
-    refresh 300 #generate this again every 5 minutes
-    
+    refresh 300       # generate this again every 5 minutes
+    store_in :memory  # optional, :memory is the default.  :file is also supported
     after "test.expires.nsecs" do |key, val|
       cool_notify 'ward@thecleavers.com', val
     end
