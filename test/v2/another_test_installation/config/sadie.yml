@@ -1,0 +1,4 @@
+storage:
+  default_storage_mechanism: file
+  file:
+    key_storage_dirpath: /tmp/sadie-test-keystor

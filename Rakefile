@@ -13,6 +13,13 @@ end
 
 namespace :spec do
   
+  desc "run all spec tests"
+  task :all => [ 'spec:sadie_server_lib', 'spec:storage_mechanism:memory',
+                 'spec:storage_mechanism:memory', 'spec:primer', 'spec:storage_manager',
+                 'spec:session', 'spec:server' ]do
+    a = 1 # a do nothing statement
+  end
+  
   desc "test sadie server library"
   task :sadie_server_lib do
     system "rspec spec/sadie_server_lib.rb"
@@ -27,7 +34,7 @@ namespace :spec do
     task :file do
       system "rspec spec/storage_mechanisms/file.rb"
     end
- end
+  end
   
   desc "test primer"
   task :primer do

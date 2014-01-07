@@ -5,7 +5,7 @@ require 'sadie_server'
 
 class SadieServer
   def self.proc_args( argv=nil )
-    { :framework_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation' ) }
+    { :framework_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','another_test_installation' ) }
   end
 end
 
