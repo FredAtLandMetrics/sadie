@@ -14,26 +14,32 @@ class SadieStorageMechanismFile < SadieStorageMechanism
   end
   
   def set( key, value )
-    raise 'Key storage directory does not exist' unless _keystorage_directory_exists?
+    _validate_keystorage_directory
     File.open(_keyvalue_filepath(key), 'wb') { |file| file.write(value) }
   end
   
   def get( key )
-    raise 'Key storage directory does not exist' unless _keystorage_directory_exists?
+    _validate_keystorage_directory
     value = File.open(_keyvalue_filepath(key), 'rb') { |f| f.read }
     value
   end
   
   def unset( key )
-    raise 'Key storage directory does not exist' unless _keystorage_directory_exists?
+    _validate_keystorage_directory
     File.delete(_keyvalue_filepath(key))
   end
   
   def has_key?( key )
-    raise 'Key storage directory does not exist' unless _keystorage_directory_exists?
+    _validate_keystorage_directory
     File.exists?(_keyvalue_filepath(key))
   end
   
+private
+
+  def _validate_keystorage_directory
+    raise "Key storage directory (#{self.key_storage_dirpath}) does not exist" unless _keystorage_directory_exists?
+  end
+
   def _keyvalue_filepath(key)
     File.join(self.key_storage_dirpath,key)
   end

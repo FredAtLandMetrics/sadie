@@ -20,6 +20,14 @@ describe 'the sadie server app' do
     Sinatra::Application
   end
   
+  before :each do
+    system 'install -d /tmp/sadie-test-keystor'
+  end
+  
+  after :each do
+    system 'rm -rf /tmp/sadie-test-keystor'
+  end
+  
   it "returns the correct value" do
     get '/minimal.primer'
     expect(last_response).to be_ok
@@ -45,6 +53,19 @@ describe 'the sadie server app' do
   it "should return the default storage mechanism config val as a symbol" do
     srv = SadieServer.new( SadieServer::proc_args )
     srv._config_hash['storage']['default_storage_mechanism'].is_a?(Symbol).should be_true
+  end
+  
+  it "should initialize the session with the default storage mechanism" do
+    srv = SadieServer.new( SadieServer::proc_args )
+    def srv.get_session
+      @sadie_session
+    end
+    sess = srv.get_session
+    puts "sess: #{sess.pretty_inspect}"
+    def sess.get_default_storage_mechanism
+      @default_storage_mechanism
+    end
+    sess.get_default_storage_mechanism.should == :file
   end
   
 end

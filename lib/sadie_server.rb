@@ -1,5 +1,6 @@
 require 'sadie_session'
 require 'yaml'
+require 'pp'
 
 class SadieServer
   
@@ -14,7 +15,25 @@ class SadieServer
         end
       end      
     end
-    @sadie_session = SadieSession.new( :primers_dirpath => File.join( self.framework_dirpath, 'primers' ) )
+    
+    sess_params = {
+      :primers_dirpath => File.join( self.framework_dirpath, 'primers' )
+    }
+    if _config_hash.is_a?( Hash ) &&
+       _config_hash.has_key?( 'storage' ) &&
+       _config_hash['storage'].is_a?( Hash )
+      if _config_hash['storage'].has_key?( 'default_storage_mechanism' )
+        sess_params[:default_storage_mechanism] = _config_hash['storage']['default_storage_mechanism']
+      end
+      if _config_hash['storage'].has_key?( 'file' ) &&
+         _config_hash['storage']['file'].is_a?( Hash ) &&
+         _config_hash['storage']['file'].has_key?( 'key_storage_dirpath' )
+        sess_params[:file_storage_mechanism_dirpath] = _config_hash['storage']['file']['key_storage_dirpath']
+      end
+      
+    end
+    puts "sess_params: #{sess_params.pretty_inspect}"
+    @sadie_session = SadieSession.new( sess_params )
   end
    
   def get( key )
