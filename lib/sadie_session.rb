@@ -4,25 +4,41 @@ require 'storage/file'
 require 'primer'
 require 'thread'
 require 'rbtree'
+require 'lock_manager'
 
 class SadieSession
   attr_accessor :primers_dirpath
   
-  def initialize( params )
-    
-    @expiry_mutex = Mutex.new
-    @expire_schedule = MultiRBTree.new
-    @expiry_thread = Thread.new do
-      _expiry_loop
-    end
-    
-    @refresh_mutex = Mutex.new
-    @refresh_schedule = MultiRBTree.new
+  def _initialize_refresh_thread
     @refresh_thread = Thread.new do
       _refresh_loop
     end
+  end
+  
+  def _initialize_expiry_thread
+    @expiry_thread = Thread.new do
+      _expiry_loop
+    end
+  end
+  
+  def initialize( params )
     
+    # init lock manager
+    @lockmgr = LockManager.new
+    
+    # init expiry and refresh threads
+    @expiry_lock = @lockmgr.create( :systype => :session,
+                                    :locktype => :expiry  )
+    @refresh_lock = @lockmgr.create( :systype => :session,
+                                     :locktype => :refresh  )
+    @expire_schedule,@refresh_schedule = MultiRBTree.new,MultiRBTree.new
+    _initialize_expiry_thread
+    _initialize_refresh_thread
+    
+    # init registered key hash
     @registered_key = {}
+    
+    # init session operating parameters
     @default_storage_mechanism = :memory
     @file_storage_mechanism_dirpath = nil
     unless params.nil?
@@ -45,18 +61,19 @@ class SadieSession
       end
     end
     
-    @storage_manager_thread_mutex = Mutex.new
+    # init storage manager
+    @storagemgr_lock = @lockmgr.create( :systype => :session,
+                                        :locktype => :expiry  )
     @storage_manager = SadieStorageManager.new
-    @storage_manager_thread_mutex.synchronize do
+    @lockmgr.critical_section_insist( @storagemgr_lock ) do
       @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
       @storage_manager.register_storage_mechanism :file, SadieStorageMechanismFile.new(:key_storage_dirpath => @file_storage_mechanism_dirpath)
     end
+    
   end
   
   def has_key?( key )
-    @storage_manager_thread_mutex.synchronize do
-      @storage_manager.has_key?( key )
-    end
+    ( @storage_manager.has_key?( key ) || primer_registered?( key ) )
   end
   
   def primer_registered?( key )
@@ -64,7 +81,7 @@ class SadieSession
   end
   
   def unset( key )
-    @storage_manager_thread_mutex.synchronize do
+    @lockmgr.critical_section_insist( @storagemgr_lock ) do
       @storage_manager.unset( key )
     end
   end
@@ -77,7 +94,7 @@ class SadieSession
         mechanism = params[:mechanism] if params.has_key?( :mechanism )
       end
     end
-    @storage_manager_thread_mutex.synchronize do
+    @lockmgr.critical_section_insist( @storagemgr_lock ) do
       @storage_manager.set( :keys => Array( keys ),
                             :value => value,
                             :mechanism => mechanism )
@@ -111,7 +128,7 @@ class SadieSession
       expires = expires_seconds.to_i + _current_time
       unless Array(keys).empty?
         Array(keys).each do |key|
-          @expiry_mutex.synchronize do
+          @lockmgr.critical_section_insist( @expiry_lock ) do
             @expire_schedule[expires] = key
           end
         end
@@ -124,7 +141,7 @@ class SadieSession
       refreshes = refresh_seconds.to_i + _current_time
       unless Array(keys).empty?
         Array(keys).each do |key|
-          @refresh_mutex.synchronize do
+          @lockmgr.critical_section_insist( @refresh_lock ) do
             @refresh_schedule[refreshes] = key
           end
         end
@@ -188,7 +205,7 @@ class SadieSession
         if ts < time_now_in_seconds
           _refresh key
         else
-          @refresh_mutex.synchronize do
+          @lockmgr.critical_section_insist( @refresh_lock ) do
             @refresh_schedule[ts] = key
           end
           break

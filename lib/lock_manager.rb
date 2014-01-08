@@ -41,7 +41,7 @@ class LockManager
   def critical_section_try( lock_id )
     if block_given?
       if @locks.has_key?( lock_id )
-        unless acquire( lock_id )
+        if acquire( lock_id )
           yield
           release( lock_id )
         end
