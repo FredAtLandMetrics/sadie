@@ -38,7 +38,7 @@ describe SadieSession do
   end
   
   it "should not execute primer assign directives" do
-    @session.has_key?("minimal.primer").should be_false
+    @session.has_key?("minimal.primer", :include_primers => false).should be_false
   end
   
   it "should be possible to _get_ registered keys" do
@@ -51,7 +51,7 @@ describe SadieSession do
   
   it "should be possible to expire on get" do
     @session.get("test.expires.onget").should == "testval"
-    @session.has_key?("test.expires.onget").should be_false
+    @session.has_key?("test.expires.onget", :include_primers => false).should be_false
   end
   
   it "should put keys in the expire schedule" do
@@ -71,9 +71,9 @@ describe SadieSession do
     @session.stub(:_current_time).and_return(2,5,8,11,14)
     @session.stub(:_expiry_loop).and_return(false)
     @session.get("test.expires.nsecs").should == "testval"
-    @session.has_key?("test.expires.nsecs").should be_true
+    @session.has_key?("test.expires.nsecs", :include_primers => false).should be_true
     @session.run_expiry_pass
-    @session.has_key?("test.expires.nsecs").should be_false
+    @session.has_key?("test.expires.nsecs", :include_primers => false).should be_false
   end
   
   it "should refresh keys" do

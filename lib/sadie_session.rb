@@ -9,18 +9,6 @@ require 'lock_manager'
 class SadieSession
   attr_accessor :primers_dirpath
   
-  def _initialize_refresh_thread
-    @refresh_thread = Thread.new do
-      _refresh_loop
-    end
-  end
-  
-  def _initialize_expiry_thread
-    @expiry_thread = Thread.new do
-      _expiry_loop
-    end
-  end
-  
   def initialize( params )
     
     # init lock manager
@@ -46,7 +34,7 @@ class SadieSession
         
         if params.has_key?( :primers_dirpath )
           self.primers_dirpath = params[:primers_dirpath]
-          puts "initializing session with primer dirpath: #{self.primers_dirpath}"
+#           puts "initializing session with primer dirpath: #{self.primers_dirpath}"
           _register_primers
         end
         
@@ -72,8 +60,19 @@ class SadieSession
     
   end
   
-  def has_key?( key )
-    ( @storage_manager.has_key?( key ) || primer_registered?( key ) )
+  def has_key?( key, params )
+    ret = @storage_manager.has_key?( key )
+    include_primers = true
+    
+    if ( params.is_a?( Hash ) ) && ( params.has_key?( :include_primers ) )
+      include_primers = params[:include_primers]
+    end      
+    
+    if ( ! ret ) && ( include_primers )
+      ret = primer_registered?( key )
+    end
+    
+    ret
   end
   
   def primer_registered?( key )
@@ -122,6 +121,18 @@ class SadieSession
   end
   
   private
+  
+  def _initialize_refresh_thread
+    @refresh_thread = Thread.new do
+      _refresh_loop
+    end
+  end
+  
+  def _initialize_expiry_thread
+    @expiry_thread = Thread.new do
+      _expiry_loop
+    end
+  end
   
   def _manage_expiry( keys, expires_seconds )
     if ! expires_seconds.is_a?( Symbol ) && expires_seconds.to_i > 0
@@ -176,18 +187,26 @@ class SadieSession
   
   def _expiry_pass
     time_now_in_seconds = _current_time
-    @expiry_mutex.synchronize do
-      loop do
-        break if @expire_schedule.empty?
+    
+    loop do
+      break if @expire_schedule.empty?
+      
+      ts,key = nil
+      
+      @lockmgr.critical_section_insist( @expiry_lock ) do
         ts,key = @expire_schedule.shift
-        if ts < time_now_in_seconds
-          unset key
-        else
-          @expire_schedule[ts] = key
-          break
-        end
       end
-    end    
+      
+      if ts < time_now_in_seconds
+        unset key
+      else
+        @lockmgr.critical_section_insist( @expiry_lock ) do
+          @expire_schedule[ts] = key
+        end
+        break
+      end
+    end
+      
   end
   
   def _refresh_loop
