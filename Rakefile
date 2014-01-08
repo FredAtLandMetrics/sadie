@@ -41,6 +41,11 @@ namespace :spec do
     system "rspec spec/primer.rb"
   end
   
+  desc "test lock_manager"
+  task :lock_manager do
+    system "rspec spec/lock_manager.rb"
+  end
+  
   desc "test storage manager"
   task :storage_manager do
     system "rspec spec/storage_manager.rb"

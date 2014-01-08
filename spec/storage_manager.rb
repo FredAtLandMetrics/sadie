@@ -5,7 +5,6 @@ require 'storage_mechanisms/memory'
 describe SadieStorageManager do
   
   it "should be able to get and set using the memory storage mechanism" do
-    
     storage = SadieStorageManager.new
     mech = SadieStorageMechanismMemory.new
     storage.register_storage_mechanism :memory, mech
