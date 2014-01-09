@@ -41,6 +41,14 @@ class SadieStorageManager
     end
   end
   
+  def has_metadata?( key )
+    @mechanisms[where_key?( key )].has_metadata?( key ) if has_key?( key )
+  end
+  
+  def metadata( key )
+    @mechanisms[where_key?( key )].metadata( key ) if has_key?( key )
+  end
+  
   def set( params )
     unless params.nil?
       
@@ -52,9 +60,16 @@ class SadieStorageManager
             
             if params.has_key?( :keys ) && params[:keys].is_a?( Array ) &&
                params.has_key?( :value )
-            
+              has_metadata = false
+              if params.has_key?(:metadata) && params[:metadata].is_a?( Hash )
+                has_metadata = true
+              end
               params[:keys].each do |key|
-                @mechanisms[params[:mechanism]].set( key, params[:value] )
+                if has_metadata
+                  @mechanisms[params[:mechanism]].set( key, params[:value], :metadata => params[:metadata] )
+                else
+                  @mechanisms[params[:mechanism]].set( key, params[:value] )
+                end
               end
             end
           end

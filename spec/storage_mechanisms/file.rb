@@ -55,9 +55,14 @@ describe SadieStorageMechanismFile do
       :type => :string,
       :awesomeness_level => :excrutiatingly
     }
+    wrong_metadata_to_test = {
+      :type => :integer,
+      :awesomeness_level => :excrutiatingly
+    }
     @mech.set 'somekey.test','some_value', :metadata => metadata_to_give
     fetched_meta = @mech.metadata( 'somekey.test' )
     ( fetched_meta == metadata_to_test ).should be_true
+    ( fetched_meta == wrong_metadata_to_test ).should be_false
   end
   
 end
