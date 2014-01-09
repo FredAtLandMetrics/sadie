@@ -86,7 +86,9 @@ So it'd be great for grabbing a list of all facebook users who've ever mentioned
 
 Similarly, it'd be a wonderful tool for performing a statistical analysis on the game of baseball based on data from every baseball game ever played, but it's not well set up for you to ask it about a particular game (unless the game were of such interest that you took the time to write primers that were associated with that particular game).
 
-Of course, it is, at it's core, a key/value hash and, as such, you could use it to do such things as well as you could any other.  It is the primers that are limited, not the storage mechanism.
+Of course, it is, at it's core, a key/value hash and, as such, you could use it to do such things as well as you could any other.  It is the primers that are limited, not the storage mechanism, so it'd be fine to build a web application that would depend upon Sadie to keep an updated version of all your chattering facebook friends and/or statistics about all the baseball games ever played and the same web app could easily mine this data for interesting things and use Sadie to cache the results of said mining for future use.  The important point here is that the primers exist to do the heavy lifting of data aggregation and transformation into usable forms and, beyond that, Sadie is a key/value store like many others.
+
+
 
 ==Contribute
 Do it!  The github url for Sadie is at: [https://github.com/FredAtLandMetrics/sadie]
