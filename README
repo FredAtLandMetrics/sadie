@@ -60,8 +60,10 @@ Have a look at other primers in test/v2/test_installation/primers for more infor
 Now run the sadie server on whatever directory you set it up on:
 
   bin/sadie_server.rb --framework-dirpath=/var/sadie
+
+When the server starts up, because this primer is set to refresh automatically, it will prime this key and it will do so again every 300 seconds as long as the server is running.
   
-And you can make get requests on the keys,
+So now you can make GET requests on the keys,
 
   wget http://localhost:4567/test.expires.nsecs -O /tmp/outputfile
 
