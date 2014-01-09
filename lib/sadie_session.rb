@@ -104,7 +104,7 @@ class SadieSession
   end
   
   def get( key )
-    if @storage_manager.has_key?( key )
+    if @storage_manager.has_key?( key, :include_primers => false )
       @storage_manager.get( key )
     elsif primer_registered?( key )
       p = Primer.new( :session => self )
