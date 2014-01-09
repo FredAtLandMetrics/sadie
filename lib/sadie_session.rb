@@ -267,9 +267,15 @@ class SadieSession
   end
   
   def _refresh( key )
-    p = Primer.new( :session => self )
-    p.decorate( @registered_key[ key ] )
-    _manage_refresh( key, p.refresh_rate )
+    @primer_lock = @lockmgr.create( :systype => :session,
+                                    :locktype => :primer,
+                                    :key => key )
+    p = nil
+    @lockmgr.critical_section_try( @primer_lock ) do
+      p = _get_primed_primer( key )
+    end
+    
+    _manage_refresh( key, p.refresh_rate ) unless p.nil?
   end
   
   def _current_time
