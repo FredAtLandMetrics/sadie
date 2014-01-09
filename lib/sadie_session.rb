@@ -114,25 +114,46 @@ class SadieSession
   end
   
   def get( key )
+    ret = nil
     if @storage_manager.has_key?( key )
-      @storage_manager.get( key )
+      ret = @storage_manager.get( key )
     elsif primer_registered?( key )
-      p = Primer.new( :session => self )
-      p.decorate( @registered_key[ key ] )
-      if p.expire == :on_get
+      
+      @primer_lock = @lockmgr.create( :systype => :session,
+                                      :locktype => :primer,
+                                      :key => key )
+      p = nil
+      
+      @lockmgr.critical_section_try( @primer_lock ) do
+        p = _get_primed_primer( key )
         ret = @storage_manager.get( key )
-        @storage_manager.unset( key )
-        ret
-      elsif ( p.refreshes? )
-        _manage_refresh( key, p.refresh_rate )
-        @storage_manager.get( key )
-      else
-        @storage_manager.get( key )
+        if p.expire == :on_get
+          @storage_manager.unset( key )
+        end
       end
+      if ! p.nil?
+        _manage_refresh( key, p.refresh_rate ) if ( p.refreshes? )
+      else 
+        @lockmgr.critical_section_insist( @primer_lock ) do
+          if @storage_manager.has_key?( key )
+            ret = @storage_manager.get( key )
+          else
+            ret = get( key )  # recurse should only happen if primer set to expire on get
+          end
+        end
+      end
+      
     end
+    ret
   end
   
   private
+  
+  def _get_primed_primer( key )
+    p = Primer.new( :session => self )
+    p.decorate( @registered_key[ key ] )
+    p
+  end
   
   def _initialize_refresh_thread
     @refresh_thread = Thread.new do

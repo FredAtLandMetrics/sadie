@@ -10,6 +10,9 @@ class LockManager
     systype = params[:systype].to_s
     locktype = params[:locktype].to_s
     lock_id = "#{systype}:#{locktype}"
+    if params.has_key?(:key)
+      lock_id += ":#{params[:key].to_s}"
+    end
     @locks[lock_id] = Mutex.new unless @locks.has_key?( lock_id )
     lock_id
   end
@@ -41,7 +44,7 @@ class LockManager
   def critical_section_try( lock_id )
     if block_given?
       if @locks.has_key?( lock_id )
-        if acquire( lock_id )
+        unless acquire( lock_id ).nil?
           yield
           release( lock_id )
         end

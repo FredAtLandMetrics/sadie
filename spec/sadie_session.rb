@@ -160,6 +160,13 @@ describe SadieSession do
     
   end
   
+  it "should not be possible to prime the same key more than once at the same time" do
+    val = @session.get("wait.primary")
+    sleep 1
+    val = @session.get("wait.primary")
+    ($max > 1).should be_false
+  end
+  
   # --- SLOW!
   if ENV.has_key?('SADIE_SESSION_TEST_TIMERS') && ENV['SADIE_SESSION_TEST_TIMERS'].to_i == 1
     

@@ -28,3 +28,4 @@
 [0.1.01] ** ground-up rewrite, ignore everything before this line if you're not a historian **
 [0.1.8] new version now at capability pairing with old version.
 [0.1.9] added metadata for keys, abstracted expiry and refresh data structs into timestamp queues, abstracted various mutexes in session into lock manager object in preparation for distributed behavior
+[0.1.10] added important lock to ensure that two threads (refresh and fetch, in this case, but will be more important in distributed case) cannot attempt to prime for the same key at the same time
