@@ -28,4 +28,36 @@ describe SadieStorageMechanismFile do
     @mech.has_key?( "somekey.test" ).should be_false
   end
   
+  it "should create a file when set is called" do
+    @mech.set 'somekey.test','some_value'
+    File.exists?( File.join( '/tmp/stormech-file-test','somekey.test' ) ).should be_true
+  end
+  
+  it "should delete a file when unset is called" do
+    @mech.set 'somekey.test','some_value'
+    File.exists?( File.join( '/tmp/stormech-file-test','somekey.test' ) ).should be_true
+    @mech.unset 'somekey.test'
+    File.exists?( File.join( '/tmp/stormech-file-test','somekey.test' ) ).should be_false
+  end
+  
+  it "should write metadata to a file" do
+    @mech.set 'somekey.test','some_value', :metadata => { :type => :string }
+    File.exists?( File.join( '/tmp/stormech-file-test','somekey.test' ) ).should be_true
+    File.exists?( File.join( '/tmp/stormech-file-test/.meta','somekey.test' ) ).should be_true
+  end
+  
+  it "should return the same metadata that was given to it" do
+    metadata_to_give = {
+      :type => :string,
+      :awesomeness_level => :excrutiatingly
+    }
+    metadata_to_test = {
+      :type => :string,
+      :awesomeness_level => :excrutiatingly
+    }
+    @mech.set 'somekey.test','some_value', :metadata => metadata_to_give
+    fetched_meta = @mech.metadata( 'somekey.test' )
+    ( fetched_meta == metadata_to_test ).should be_true
+  end
+  
 end
