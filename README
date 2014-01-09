@@ -74,6 +74,20 @@ Or, you can use the sadie session in your Ruby code like this:
  
 That's it!
 
+==Caveat
+It's important to note that Sadie is going to be great for things like:
+* webscraping a pre-defined list of websites
+* digesting large datasets
+* log analysis
+
+but not so great for anything where you'd want to pass parameters to the querying function.
+
+So it'd be great for grabbing a list of all facebook users who've ever mentioned your name along with everything they've ever written, but it wouldn't be wonderful at grabbing everything some particular facebook user has ever written about you.
+
+Similarly, it'd be a wonderful tool for performing a statistical analysis on the game of baseball based on data from every baseball game ever played, but it's not well set up for you to ask it about a particular game (unless the game were of such interest that you took the time to write primers that were associated with that particular game).
+
+Of course, it is, at it's core, a key/value hash and, as such, you could use it to do such things as well as you could any other.  It is the primers that are limited, not the storage mechanism.
+
 ==Contribute
 Do it!  The github url for Sadie is at: [https://github.com/FredAtLandMetrics/sadie]
  
