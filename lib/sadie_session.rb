@@ -3,7 +3,6 @@ require 'storage/memory'
 require 'storage/file'
 require 'primer'
 require 'thread'
-# require 'rbtree'
 require 'lock_manager'
 require 'timestamp_queue'
 
@@ -38,7 +37,6 @@ class SadieSession
         
         if params.has_key?( :primers_dirpath )
           self.primers_dirpath = params[:primers_dirpath]
-#           puts "initializing session with primer dirpath: #{self.primers_dirpath}"
           _register_primers
         end
         
@@ -228,8 +226,6 @@ class SadieSession
       @lockmgr.critical_section_insist( @refresh_lock ) do
         keys = @refresh_queue.find(:all, :before => time_now_in_seconds)
       end
-      
-#       puts "keys: #{keys.pretty_inspect}"
       
       unless keys.nil?
         keys.each do | key |
