@@ -4,9 +4,9 @@ Sadie is a general-purpose data server written in Ruby for other Rubyists.  It i
 
 ==Purpose
 Imagine you work in the IT department of a cell phone company and your boss asks you to design a system that will:
-  * build a status page that shows a map with the operational status of all the cell towers and, for each one, the distance to the nearest field technician
-  * generate a shapefile and a spreadsheet of the same data that will be available and up-to-date on the company's intranet, 24/7
-  * when there's an outtage, send an SMS alert to the nearest field tech to the tower with the problem
+* build a status page that shows a map with the operational status of all the cell towers and, for each one, the distance to the nearest field technician
+* generate a shapefile and a spreadsheet of the same data that will be available and up-to-date on the company's intranet, 24/7
+* when there's an outtage, send an SMS alert to the nearest field tech to the tower with the problem
 
 This is all inter-related data and, for a developer, it's not all that difficult to start thinking about how to approach these problems.
 
@@ -77,8 +77,8 @@ Do it!  The github url for Sadie is at: [https://github.com/FredAtLandMetrics/sa
  
 ==Future versions
 Future version of Sadie will:
-  * index on key string patterns
-  * make use of a redis storage mechanism to become scalable and distributed
+* index on key string patterns
+* make use of a redis storage mechanism to become scalable and distributed
 
 ==Where to get it
 Sadie can be downloaded via its rubygems page[https://rubygems.org/gems/sadie] or from github[https://github.com/FredAtLandMetrics/sadie].
