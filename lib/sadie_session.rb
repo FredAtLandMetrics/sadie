@@ -3,8 +3,9 @@ require 'storage/memory'
 require 'storage/file'
 require 'primer'
 require 'thread'
-require 'rbtree'
+# require 'rbtree'
 require 'lock_manager'
+require 'timestamp_queue'
 
 class SadieSession
   attr_accessor :primers_dirpath
@@ -19,9 +20,12 @@ class SadieSession
                                     :locktype => :expiry  )
     @refresh_lock = @lockmgr.create( :systype => :session,
                                      :locktype => :refresh  )
-    @expire_schedule,@refresh_schedule = MultiRBTree.new,MultiRBTree.new
+
+    @expiry_queue,@refresh_queue = TimestampQueue.new,TimestampQueue.new
+    
     _initialize_expiry_thread
     _initialize_refresh_thread
+    
     
     # init registered key hash
     @registered_key = {}
@@ -140,7 +144,7 @@ class SadieSession
       unless Array(keys).empty?
         Array(keys).each do |key|
           @lockmgr.critical_section_insist( @expiry_lock ) do
-            @expire_schedule[expires] = key
+            @expiry_queue.insert( key, :timestamp => expires )
           end
         end
       end
@@ -153,7 +157,7 @@ class SadieSession
       unless Array(keys).empty?
         Array(keys).each do |key|
           @lockmgr.critical_section_insist( @refresh_lock ) do
-            @refresh_schedule[refreshes] = key
+            @refresh_queue.insert( key, :timestamp => refreshes )
           end
         end
       end
@@ -189,22 +193,23 @@ class SadieSession
     time_now_in_seconds = _current_time
     
     loop do
-      break if @expire_schedule.empty?
+      break if @expiry_queue.empty?
       
       ts,key = nil
       
+      keys_to_unset = nil
       @lockmgr.critical_section_insist( @expiry_lock ) do
-        ts,key = @expire_schedule.shift
+        
+        keys_to_unset = @expiry_queue.find( :all, :before => time_now_in_seconds )
+        
       end
       
-      if ts < time_now_in_seconds
-        unset key
-      else
-        @lockmgr.critical_section_insist( @expiry_lock ) do
-          @expire_schedule[ts] = key
+      unless keys_to_unset.nil?
+        keys_to_unset.each do |key|
+          unset key
         end
-        break
       end
+      
     end
       
   end
@@ -218,18 +223,20 @@ class SadieSession
   
   def _refresh_pass
     time_now_in_seconds = _current_time
-      loop do
-        break if @refresh_schedule.empty?
-        ts,key = @refresh_schedule.shift
-        if ts < time_now_in_seconds
+    unless @refresh_queue.empty?
+      keys = nil
+      @lockmgr.critical_section_insist( @refresh_lock ) do
+        keys = @refresh_queue.find(:all, :before => time_now_in_seconds)
+      end
+      
+#       puts "keys: #{keys.pretty_inspect}"
+      
+      unless keys.nil?
+        keys.each do | key |
           _refresh key
-        else
-          @lockmgr.critical_section_insist( @refresh_lock ) do
-            @refresh_schedule[ts] = key
-          end
-          break
         end
       end
+    end
   end
   
   def _refresh( key )

@@ -1,4 +1,5 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+require 'timestamp_queue'
 require 'sadie_session'
 require 'pp'
 describe SadieSession do
@@ -55,12 +56,19 @@ describe SadieSession do
   end
   
   it "should put keys in the expire schedule" do
-    def @session.in_expire_schedule?( key )
-      ( ! @expire_schedule.values.index(key).nil? )
+    def @session.get_expiry_queue
+      @expiry_queue
     end
+    q = @session.get_expiry_queue
+    def q.in_expire_schedule?( key )
+      ! @queue.values.index(key).nil?
+    end
+#     def @session.in_expire_schedule?( key )
+#       ( ! @expire_schedule.values.index(key).nil? )
+#     end
     
     @session.get("test.expires.nsecs").should == "testval"
-    @session.in_expire_schedule?("test.expires.nsecs").should be true
+    q.in_expire_schedule?("test.expires.nsecs").should be true
   end
   
   it "should expire keys using _expire_pass" do

@@ -41,6 +41,11 @@ namespace :spec do
     system "rspec spec/primer.rb"
   end
   
+  desc "test timestamp queue"
+  task :timestamp_queue do
+    system "rspec spec/timestamp_queue.rb"
+  end
+  
   desc "test lock_manager"
   task :lock_manager do
     system "rspec spec/lock_manager.rb"

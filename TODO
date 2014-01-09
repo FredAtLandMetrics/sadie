@@ -13,7 +13,13 @@ For mutexes, I'm thinking a locking abstraction will do.  Something like:
 
   lock_id = acquire_lock( params )
   release_lock( lock_id )
-  
+
+Once abstracted, this should be relatively straightforward to extend as needed for distributed-ness.
+
+[ NOTE: lock abstraction is now done ]  
+
 The expiry and refresh data structures are currently implemented as red-black trees, but it would be ideal if there were a way to share this information amongst the sadie instances.  I'm thinking it might make sense to only a single sadie instance to be expiring at a time (and then only for a set amount of time).  Further, I'm thinking refresh could be synchronized such that only a single sadie instance can be finding a refreshable key at a time, but, once it's selected one, it releases its lock so that another instance can begin a search for a another refreshable.
+
+[ NOTE: the expiry and refresh data structures are now maintained by a 'timestamp_queue' class that will make it easier to swap in redis-based functionality ]
 
 The registered keys data structure can actually be maintained separately in each instance in as much as the primers should really be the same across the instances.
