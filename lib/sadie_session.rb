@@ -87,24 +87,34 @@ class SadieSession
     end
   end
   
+  def has_metadata?( key )
+    @storage_manager.has_metadata?( key )
+  end
+  
+  def metadata( key )
+    @storage_manager.metadata( key )
+  end
+  
   def set( keys, value, params=nil )
-    expires, mechanism = :never, @default_storage_mechanism
+    expires, mechanism, metadata = :never, @default_storage_mechanism, nil
     unless params.nil?
       if params.is_a? Hash
         expires = params[:expire] if params.has_key?( :expire )
         mechanism = params[:mechanism] if params.has_key?( :mechanism )
+        metadata = params[:metadata] if params.has_key?( :metadata )
       end
     end
     @lockmgr.critical_section_insist( @storagemgr_lock ) do
       @storage_manager.set( :keys => Array( keys ),
                             :value => value,
-                            :mechanism => mechanism )
+                            :mechanism => mechanism,
+                            :metadata => metadata )
     end
     _manage_expiry( keys, expires ) unless expires == :never || expires == :on_get
   end
   
   def get( key )
-    if @storage_manager.has_key?( key, :include_primers => false )
+    if @storage_manager.has_key?( key )
       @storage_manager.get( key )
     elsif primer_registered?( key )
       p = Primer.new( :session => self )

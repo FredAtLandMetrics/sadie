@@ -144,6 +144,22 @@ describe SadieSession do
     @session.detect_storage_mechanism("minimal.primer.file").should == :file
   end
   
+  it "should be able to set and retrieve metadata" do
+    test_metadata_hash = {  :type => :string,
+                            :importance => :huge  }
+    test_metadata_hash_right = {  :type => :string,
+                                  :importance => :huge  }
+    test_metadata_hash_wrong = {  :type => :string,
+                                  :importance => :mild  }
+    @session.set( "test.key1", "test.value1", :metadata => test_metadata_hash )
+    @session.set( "test.key2", "test.value2" )
+    @session.has_metadata?( "test.key1" ).should be_true
+    @session.has_metadata?( "test.key2" ).should be_false
+    ( @session.metadata( "test.key1" ) == test_metadata_hash_right ).should be_true
+    ( @session.metadata( "test.key1" ) == test_metadata_hash_wrong ).should be_false
+    
+  end
+  
   # --- SLOW!
   if ENV.has_key?('SADIE_SESSION_TEST_TIMERS') && ENV['SADIE_SESSION_TEST_TIMERS'].to_i == 1
     
