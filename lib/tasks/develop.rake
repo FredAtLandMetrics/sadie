@@ -33,13 +33,13 @@ namespace :development do
   task :install_temp_redis => [ :ensure_opt_directory, :download_redis_source ] do
     Dir.chdir( opt_dirpath )
     system "tar xzf ../download/redis-#{redis_version}.tar.gz"
-    Dir.chdir( Dir.join( opt_dirpath, "redis-#{redis_version}" ) )
+    Dir.chdir( File.join( opt_dirpath, "redis-#{redis_version}" ) )
     system "make"
   end
   
   desc "start temporary redis service"
   task :start_temp_redis do
-    Dir.chdir( Dir.join( opt_dirpath, "redis-#{redis_version}" ) )
+    Dir.chdir( File.join( opt_dirpath, "redis-#{redis_version}" ) )
     system "src/redis-server"
   end
   
