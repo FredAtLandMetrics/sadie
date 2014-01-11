@@ -5,6 +5,7 @@ require 'pp'
 class SadieServer
   
   attr_accessor :framework_dirpath, :default_storage_mechanism
+  
   def initialize( params=nil )
     self.framework_dirpath = "/var/sadie"
     self.default_storage_mechanism = :memory

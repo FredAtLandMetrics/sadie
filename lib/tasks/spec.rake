@@ -9,7 +9,7 @@ namespace :spec do
   
   desc "redis based sadie"
   task :redis do
-    system "rspec spec/redis.rb"
+    system "rspec spec/sadie_redis.rb"
   end
   
   desc "test sadie server library"
@@ -50,7 +50,9 @@ namespace :spec do
   
   desc "test session"
   task :session do
+    puts "pre!"
     system "rspec spec/sadie_session.rb"
+    puts "post!"
   end
   
   desc "test session with timers (slow)"

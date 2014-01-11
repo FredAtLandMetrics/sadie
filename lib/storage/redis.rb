@@ -1,4 +1,6 @@
+require 'redis'
 require 'sadie_storage_mechanism'
+
 class SadieStorageMechanismRedis < SadieStorageMechanism
   
   def initialize ( params=nil )

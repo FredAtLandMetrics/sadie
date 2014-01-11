@@ -299,3 +299,4 @@ class SadieSession
     Time.now.to_i
   end
 end
+

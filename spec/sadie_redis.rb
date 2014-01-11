@@ -1,20 +1,23 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 $:.unshift File.join(File.dirname(__FILE__), '..')
 
-require 'rack/test'
-require 'sadie_server'
-require 'sadie_session'
-require 'pp'
 
-class SadieServer
-  def self.proc_args( argv=nil )
-    { :framework_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','redis_test_installation' ) }
-  end
-end
-
-require 'bin/sadie_server'
+# require 'bin/sadie_server'
 
 describe 'RedisBasedSadie' do
+  
+  require 'rack/test'
+  require 'sadie_server'
+  require 'sadie_session'
+  require 'pp'
+
+  class SadieServer
+    def self.proc_args( argv=nil )
+      { :framework_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','redis_test_installation' ) }
+    end
+  end
+  
+  require 'bin/sadie_server'
   
   describe SadieServer do
     include Rack::Test::Methods
