@@ -1,6 +1,7 @@
 require 'sadie_storage_manager'
 require 'storage/memory'
 require 'storage/file'
+require 'storage/redis'
 require 'primer'
 require 'thread'
 require 'lock_manager'
@@ -32,6 +33,7 @@ class SadieSession
     # init session operating parameters
     @default_storage_mechanism = :memory
     @file_storage_mechanism_dirpath = nil
+    @redis_port,@redis_host = nil,nil
     unless params.nil?
       if params.is_a? Hash
         
@@ -48,6 +50,14 @@ class SadieSession
           @file_storage_mechanism_dirpath = params[:file_storage_mechanism_dirpath]
         end
         
+        if params.has_key?( :redis_port )
+          @redis_port = params[:redis_port]
+        end
+        
+        if params.has_key?( :redis_host )
+          @redis_host = params[:redis_host]
+        end
+        
       end
     end
     
@@ -58,6 +68,13 @@ class SadieSession
     @lockmgr.critical_section_insist( @storagemgr_lock ) do
       @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
       @storage_manager.register_storage_mechanism :file, SadieStorageMechanismFile.new(:key_storage_dirpath => @file_storage_mechanism_dirpath)
+      
+      unless @redis_host.nil? || @redis_port.nil?
+        @storage_manager.register_storage_mechanism :redis, SadieStorageMechanismRedis.new(
+          :host => @redis_host,
+          :port => @redis_port
+        )
+      end
     end
     
   end

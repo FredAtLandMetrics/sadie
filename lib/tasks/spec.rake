@@ -7,6 +7,11 @@ namespace :spec do
     a = 1 # a do nothing statement
   end
   
+  desc "redis based sadie"
+  task :redis do
+    system "rspec spec/redis.rb"
+  end
+  
   desc "test sadie server library"
   task :sadie_server_lib do
     system "rspec spec/sadie_server_lib.rb"

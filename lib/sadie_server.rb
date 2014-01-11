@@ -19,20 +19,45 @@ class SadieServer
     sess_params = {
       :primers_dirpath => File.join( self.framework_dirpath, 'primers' )
     }
-    if _config_hash.is_a?( Hash ) &&
-       _config_hash.has_key?( 'storage' ) &&
-       _config_hash['storage'].is_a?( Hash )
-      if _config_hash['storage'].has_key?( 'default_storage_mechanism' )
-        sess_params[:default_storage_mechanism] = _config_hash['storage']['default_storage_mechanism']
+    if _config_hash.is_a?( Hash )
+      
+      # storage params
+      if _config_hash.has_key?( 'storage' ) &&
+         _config_hash['storage'].is_a?( Hash )
+      
+        # default storage mechanism
+        if _config_hash['storage'].has_key?( 'default_storage_mechanism' )
+          sess_params[:default_storage_mechanism] = _config_hash['storage']['default_storage_mechanism']
+        end
+        
+        # key storage dirpath
+        if _config_hash['storage'].has_key?( 'file' ) &&
+          _config_hash['storage']['file'].is_a?( Hash ) &&
+          _config_hash['storage']['file'].has_key?( 'key_storage_dirpath' )
+          sess_params[:file_storage_mechanism_dirpath] = _config_hash['storage']['file']['key_storage_dirpath']
+        end
       end
-      if _config_hash['storage'].has_key?( 'file' ) &&
-         _config_hash['storage']['file'].is_a?( Hash ) &&
-         _config_hash['storage']['file'].has_key?( 'key_storage_dirpath' )
-        sess_params[:file_storage_mechanism_dirpath] = _config_hash['storage']['file']['key_storage_dirpath']
-      end
+
+      # redis params
+      if _config_hash.has_key?( 'redis' ) &&
+         _config_hash['redis'].is_a?( Hash )
+        
+        if _config_hash['redis'].has_key?( 'port' )
+          
+          sess_params[:redis_port] = _config_hash['redis']['port']
+          
+        end
+        
+         if _config_hash['redis'].has_key?( 'host' )
+          
+          sess_params[:redis_host] = _config_hash['redis']['host']
+          
+        end
+        
+     end
       
     end
-    puts "sess_params: #{sess_params.pretty_inspect}"
+#     puts "sess_params: #{sess_params.pretty_inspect}"
     @sadie_session = SadieSession.new( sess_params )
   end
    
@@ -52,25 +77,6 @@ class SadieServer
 # 
 #   def get_multiple
 #   end
-  
-  def _config_hash
-    
-    if @config_hash.nil?
-      @config_hash = YAML.load_file(File.join(self.framework_dirpath,'config','sadie.yml'))
-      
-      if @config_hash.is_a?( Hash )
-        if ( @config_hash.has_key?( 'storage' ) ) &&
-           ( @config_hash['storage'].is_a?( Hash ) ) &&
-           ( @config_hash['storage'].has_key?( 'default_storage_mechanism' ) )
-          @config_hash['storage']['default_storage_mechanism'] = @config_hash['storage']['default_storage_mechanism'].to_sym
-        end
-      end
-      
-    end
-    @config_hash
-    
-  end
-  
   def self.proc_args( argv_param=nil )
     argv = argv_param.dup
     ARGV.clear
@@ -93,6 +99,26 @@ class SadieServer
       end
     end
     ret
+  end
+  
+private
+  
+  def _config_hash
+    
+    if @config_hash.nil?
+      @config_hash = YAML.load_file(File.join(self.framework_dirpath,'config','sadie.yml'))
+      
+      if @config_hash.is_a?( Hash )
+        if ( @config_hash.has_key?( 'storage' ) ) &&
+           ( @config_hash['storage'].is_a?( Hash ) ) &&
+           ( @config_hash['storage'].has_key?( 'default_storage_mechanism' ) )
+          @config_hash['storage']['default_storage_mechanism'] = @config_hash['storage']['default_storage_mechanism'].to_sym
+        end
+      end
+      
+    end
+    @config_hash
+    
   end
   
 end
