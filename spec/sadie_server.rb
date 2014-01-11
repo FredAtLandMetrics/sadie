@@ -7,6 +7,10 @@ class SadieServer
   def self.proc_args( argv=nil )
     { :framework_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','another_test_installation' ) }
   end
+  
+  def get_config_hash
+    _config_hash
+  end
 end
 
 require 'bin/sadie_server'
@@ -22,6 +26,7 @@ describe 'the sadie server app' do
   
   before :each do
     system 'install -d /tmp/sadie-test-keystor'
+    @server = SadieServer.new( SadieServer::proc_args )
   end
   
   after :each do
@@ -46,26 +51,16 @@ describe 'the sadie server app' do
   end
   
   it "should return the config as a hash" do
-    srv = SadieServer.new( SadieServer::proc_args )
-    srv._config_hash.is_a?( Hash ).should be_true
+    @server.get_config_hash.is_a?( Hash ).should be_true
   end
   
   it "should return the default storage mechanism config val as a symbol" do
-    srv = SadieServer.new( SadieServer::proc_args )
-    srv._config_hash['storage']['default_storage_mechanism'].is_a?(Symbol).should be_true
+    @server.get_config_hash['storage']['default_storage_mechanism'].is_a?(Symbol).should be_true
   end
   
   it "should initialize the session with the default storage mechanism" do
-    srv = SadieServer.new( SadieServer::proc_args )
-    def srv.get_session
-      @sadie_session
-    end
-    sess = srv.get_session
-    puts "sess: #{sess.pretty_inspect}"
-    def sess.get_default_storage_mechanism
-      @default_storage_mechanism
-    end
-    sess.get_default_storage_mechanism.should == :file
+    sess = @server.instance_variable_get(:@sadie_session)
+    sess.instance_variable_get(:@default_storage_mechanism).should == :file
   end
   
 end
