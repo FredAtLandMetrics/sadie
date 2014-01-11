@@ -56,70 +56,53 @@ describe SadieSession do
   end
   
   it "should put keys in the expire schedule" do
-    def @session.get_expiry_queue
-      @expiry_queue
-    end
-    q = @session.get_expiry_queue
-    def q.in_expire_schedule?( key )
-      ! @queue.values.index(key).nil?
-    end
-#     def @session.in_expire_schedule?( key )
-#       ( ! @expire_schedule.values.index(key).nil? )
-#     end
     
+    expiry_queue_object = @session.instance_variable_get(:@expiry_queue)
+    expiry_queue_rbtree = expiry_queue_object.instance_variable_get(:@queue)
     @session.get("test.expires.nsecs").should == "testval"
-    q.in_expire_schedule?("test.expires.nsecs").should be true
+    expiry_queue_rbtree.values.index("test.expires.nsecs").nil?.should be_false
+    
   end
   
   it "should expire keys using _expire_pass" do
     
-    def @session.run_expiry_pass
-      _expiry_pass
-    end
     @session.stub(:_current_time).and_return(2,5,8,11,14)
     @session.stub(:_expiry_loop).and_return(false)
     @session.get("test.expires.nsecs").should == "testval"
     @session.has_key?("test.expires.nsecs", :include_primers => false).should be_true
-    @session.run_expiry_pass
+    @session.send(:_expiry_pass) # exec private method _expiry_pass
     @session.has_key?("test.expires.nsecs", :include_primers => false).should be_false
+    
   end
   
   it "should refresh keys" do
     
-    def @session.run_refresh_pass
-      _refresh_pass
-    end
     @session.stub(:_current_time).and_return(2,5,8,11,14)
     @session.stub(:_refresh_loop).and_return(false)
     @session.get("test.refresh").should == "refresh"
-    @session.run_refresh_pass
+    @session.send(:_refresh_pass) # exec private method _refresh_pass
     @session.get("test.refresh").should == "rrefresh"
+    
   end
   
   it "should set the default storage mechanism" do
-   def @session.get_default_storage_mechanism
-      @default_storage_mechanism
-    end
-    @session.get_default_storage_mechanism.should == :memory
+    
+    @session.instance_variable_get(:@default_storage_mechanism).should == :memory
     @session_default_file = SadieSession.new(
       :primers_dirpath => File.join( File.dirname( __FILE__ ), '..','test','v2','test_installation','primers' ),
-      :default_storage_mechanism => :file)
-    def @session_default_file.get_default_storage_mechanism
-      @default_storage_mechanism
-    end
-    @session_default_file.get_default_storage_mechanism.should == :file
+      :default_storage_mechanism => :file
+    )
+    @session_default_file.instance_variable_get(:@default_storage_mechanism).should == :file
+    
   end
   
   it "should initialize the file storage mechanism with the key storage dirpath set in init params" do
-    def @session.storagemgr
-      @storage_manager
-    end
-    mgr = @session.storagemgr
-    def mgr.getfilemech
-      @mechanisms[:file]
-    end
-    filemech = mgr.getfilemech
-    filemech.key_storage_dirpath.should == '/tmp/sadie-test-keystor'
+
+    mgr = @session.instance_variable_get(:@storage_manager)
+    mechhash = mgr.instance_variable_get(:@mechanisms)
+    filestoragemech = mechhash[:file]
+    filestoragemech.key_storage_dirpath.should == '/tmp/sadie-test-keystor'
+    
   end
   
   it "should store keys in different storage mechanisms" do
