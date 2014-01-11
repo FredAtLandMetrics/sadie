@@ -106,25 +106,19 @@ describe SadieSession do
   end
   
   it "should store keys in different storage mechanisms" do
-    def @session.detect_storage_mechanism(key)
-      @storage_manager.where_key?( key )
-    end
     @session.set('key1','val1',:mechanism => :memory)
     @session.set('key2','val2',:mechanism => :file)
-    @session.detect_storage_mechanism('key1').should == :memory
-    @session.detect_storage_mechanism('key2').should == :file
+    @session.instance_variable_get(:@storage_manager).where_key?('key1').should == :memory
+    @session.instance_variable_get(:@storage_manager).where_key?('key2').should == :file
   end
   
   it "should be possible for primer files to choose the storage mechanism" do
-    def @session.detect_storage_mechanism(key)
-      @storage_manager.where_key?( key )
-    end
     val_mem = @session.get("minimal.primer")
     val_file = @session.get("minimal.primer.file")
     val_mem.should == "testval"
     val_file.should == "testval_file"
-    @session.detect_storage_mechanism("minimal.primer").should == :memory
-    @session.detect_storage_mechanism("minimal.primer.file").should == :file
+    @session.instance_variable_get(:@storage_manager).where_key?('minimal.primer').should == :memory
+    @session.instance_variable_get(:@storage_manager).where_key?('minimal.primer.file').should == :file
   end
   
   it "should be able to set and retrieve metadata" do
