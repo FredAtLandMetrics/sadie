@@ -34,18 +34,14 @@ describe 'RedisBasedSadie' do
     end
     
     it "should initialize the session with the redis host and port" do
-      def @server.get_session
-        @sadie_session
-      end
-      sess = @server.get_session
-      def sess.get_redis_port
-        @redis_port
-      end
-      def sess.get_redis_host
-        @redis_host
-      end
-      sess.get_redis_port.to_i.should == 6379
-      sess.get_redis_host.should == 'localhost'
+      sess = @server.instance_variable_get(:@sadie_session)
+      sess.instance_variable_get(:@redis_port).to_i.should == 6379
+      sess.instance_variable_get(:@redis_host).should == 'localhost'
+    end
+    
+    it "should initialize the session with redis-based session coordination" do
+      sess = @server.instance_variable_get(:@sadie_session)
+      sess.instance_variable_get(:@session_coordination).should == :redis
     end
       
   end
@@ -120,8 +116,7 @@ describe 'RedisBasedSadie' do
       fetched_meta = @redis_storage_mechanism.metadata( 'somekey.test' )
       ( fetched_meta == metadata_to_test ).should be_true
       ( fetched_meta == wrong_metadata_to_test ).should be_false
-    end    
-    
+    end
     
   end
   

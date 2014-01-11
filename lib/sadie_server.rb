@@ -49,13 +49,20 @@ class SadieServer
           
         end
         
-         if _config_hash['redis'].has_key?( 'host' )
+        if _config_hash['redis'].has_key?( 'host' )
           
           sess_params[:redis_host] = _config_hash['redis']['host']
           
         end
         
-     end
+      end
+      
+      sess_params[:session_coordination] = :none
+      if _config_hash.has_key?( 'session' ) &&
+         _config_hash['session'].is_a?( Hash ) &&
+         _config_hash['session'].has_key?('session_coordination')
+        sess_params[:session_coordination] = _config_hash['session']['session_coordination']
+      end
       
     end
 #     puts "sess_params: #{sess_params.pretty_inspect}"
@@ -114,6 +121,16 @@ private
            ( @config_hash['storage'].is_a?( Hash ) ) &&
            ( @config_hash['storage'].has_key?( 'default_storage_mechanism' ) )
           @config_hash['storage']['default_storage_mechanism'] = @config_hash['storage']['default_storage_mechanism'].to_sym
+        end
+        if ( @config_hash.has_key?( 'session' ) ) &&
+           ( @config_hash['session'].is_a?( Hash ) )
+          
+          @config_hash['session']['session_coordination'] =
+              @config_hash['session'].has_key?('session_coordination') ?
+                  @config_hash['session']['session_coordination'].to_sym :
+                  :none
+        else
+          @config_hash['session'] = { 'session_coordination' => :none }
         end
       end
       

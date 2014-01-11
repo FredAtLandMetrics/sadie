@@ -34,6 +34,7 @@ class SadieSession
     @default_storage_mechanism = :memory
     @file_storage_mechanism_dirpath = nil
     @redis_port,@redis_host = nil,nil
+    @session_coordination = :none
     unless params.nil?
       if params.is_a? Hash
         
@@ -58,6 +59,9 @@ class SadieSession
           @redis_host = params[:redis_host]
         end
         
+        if params.has_key?( :session_coordination )
+          @session_coordination = params[:session_coordination]
+        end
       end
     end
     

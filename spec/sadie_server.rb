@@ -63,4 +63,10 @@ describe 'the sadie server app' do
     sess.instance_variable_get(:@default_storage_mechanism).should == :file
   end
   
+  it "should initialize the session with no session coordination" do
+    sess = @server.instance_variable_get(:@sadie_session)
+    sess.instance_variable_get(:@session_coordination).should == :none
+  end
+    
+  
 end
