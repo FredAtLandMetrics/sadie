@@ -8,3 +8,4 @@ storage:
     key_storage_dirpath: /tmp/sadie-test-keystor
 
 session:
+  instance_coordination: redis  # optional, could also be 'none'
