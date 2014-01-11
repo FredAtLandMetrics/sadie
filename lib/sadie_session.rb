@@ -12,24 +12,6 @@ class SadieSession
   
   def initialize( params )
     
-    # init lock manager
-    @lockmgr = LockManager.new
-    
-    # init expiry and refresh threads
-    @expiry_lock = @lockmgr.create( :systype => :session,
-                                    :locktype => :expiry  )
-    @refresh_lock = @lockmgr.create( :systype => :session,
-                                     :locktype => :refresh  )
-
-    @expiry_queue,@refresh_queue = TimestampQueue.new,TimestampQueue.new
-    
-    _initialize_expiry_thread
-    _initialize_refresh_thread
-    
-    
-    # init registered key hash
-    @registered_key = {}
-    
     # init session operating parameters
     @default_storage_mechanism = :memory
     @file_storage_mechanism_dirpath = nil
@@ -40,7 +22,7 @@ class SadieSession
         
         if params.has_key?( :primers_dirpath )
           self.primers_dirpath = params[:primers_dirpath]
-          _register_primers
+          
         end
         
         if params.has_key?( :default_storage_mechanism )
@@ -64,6 +46,27 @@ class SadieSession
         end
       end
     end
+    
+    # init lock manager
+    @lockmgr = LockManager.new
+    
+    # init expiry and refresh threads
+    @expiry_lock = @lockmgr.create( :systype => :session,
+                                    :locktype => :expiry  )
+    @refresh_lock = @lockmgr.create( :systype => :session,
+                                     :locktype => :refresh  )
+
+    @expiry_queue,@refresh_queue = TimestampQueue.new,TimestampQueue.new
+    
+    _initialize_expiry_thread
+    _initialize_refresh_thread
+    
+    
+    # init registered key hash
+    @registered_key = {}
+    
+    # register primers
+    _register_primers if ( ! self.primers_dirpath.nil? ) && ( Dir.exists?( self.primers_dirpath ) )
     
     # init storage manager
     @storagemgr_lock = @lockmgr.create( :systype => :session,

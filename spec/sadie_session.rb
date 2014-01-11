@@ -1,11 +1,8 @@
 $:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
-puts "cp0"
 require 'timestamp_queue'
-puts "cp1"
 require 'sadie_session'
-puts "cp2"
 require 'pp'
-puts "cp10"
+
 describe SadieSession do
   
   before :each do

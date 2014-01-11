@@ -50,9 +50,7 @@ namespace :spec do
   
   desc "test session"
   task :session do
-    puts "pre!"
     system "rspec spec/sadie_session.rb"
-    puts "post!"
   end
   
   desc "test session with timers (slow)"
