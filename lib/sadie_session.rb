@@ -161,7 +161,7 @@ class SadieSession
         p = _get_primed_primer( key )
         ret = @storage_manager.get( key )
         if p.expire == :on_get
-          @storage_manager.unset( key )
+          unset( key )
         end
       end
       if ! p.nil?
