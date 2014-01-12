@@ -64,6 +64,14 @@ describe 'RedisBasedSadie' do
       storage_mgr.mechanism_is_registered?( :redis ).should be_true
     end
     
+    it "should init the expiry queue as a RedisTimestampQueue" do
+      @session.instance_variable_get(:@expiry_queue).is_a?( RedisTimestampQueue ).should be_true
+    end
+    
+    it "should init the refresh queue as a RedisTimestampQueue" do
+      @session.instance_variable_get(:@refresh_queue).is_a?( RedisTimestampQueue ).should be_true
+    end
+  
   end
   
   describe SadieStorageMechanismRedis do

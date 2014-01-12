@@ -56,7 +56,16 @@ class SadieSession
     @refresh_lock = @lockmgr.create( :systype => :session,
                                      :locktype => :refresh  )
 
-    @expiry_queue,@refresh_queue = TimestampQueue.new,TimestampQueue.new
+    if ( ! @redis_host.nil? ) && ( ! @redis_port.nil? ) && ( @session_coordination == :redis )
+      @expiry_queue = RedisTimestampQueue.new( :host => @redis_host,
+                                               :port => @redis_port,
+                                               :handle => "expiry_queue" )
+      @refresh_queue = RedisTimestampQueue.new( :host => @redis_host,
+                                                :port => @redis_port,
+                                                :handle => "refresh_queue" )
+    else
+      @expiry_queue,@refresh_queue = TimestampQueue.new,TimestampQueue.new
+    end
     
     _initialize_expiry_thread
     _initialize_refresh_thread

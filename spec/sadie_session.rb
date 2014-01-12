@@ -51,6 +51,14 @@ describe SadieSession do
     @session.get("subdir.test").should == "testval"
   end
   
+  it "should init the expiry queue as a TimestampQueue" do
+    @session.instance_variable_get(:@expiry_queue).is_a?( TimestampQueue ).should be_true
+  end
+  
+  it "should init the refresh queue as a TimestampQueue" do
+    @session.instance_variable_get(:@refresh_queue).is_a?( TimestampQueue ).should be_true
+  end
+  
   it "should be possible to expire on get" do
     @session.get("test.expires.onget").should == "testval"
     @session.has_key?("test.expires.onget", :include_primers => false).should be_false
