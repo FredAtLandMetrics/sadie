@@ -21,7 +21,7 @@ Sadie is a key/value store that uses <em>primers</em>--which are really just rub
 
 For data that changes often, it's possible to expire data after a set amount of time or, if necessary, just after it's accessed for a just-in-time computation.
 
-Primers can also reference other primers so it's easy to hide complexity.
+Primers can reference other primers so it's easy to hide complexity, but a single primer can also be used to prime multiple keys.  In this way, it is easy to optimize for the case where several statistics depend upon the same database query or iteration over a set of records.  Rather than scanning a million records to find the average, then doing it again to find the minimum, then again for the maximum and again for the median, all of these statistics can easily be calculated during a single pass and, when a client requests the median, the average, minimum, and maximum will also be calculated and stored such that, if they are subsequently requested, no additional work will be necessary to fulfill the request.
 
 For large, less frequently accessed data, it is possible to specfiy that the value be stored to disk instead of memory.
 
