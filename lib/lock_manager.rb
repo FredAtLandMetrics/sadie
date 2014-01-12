@@ -3,7 +3,22 @@ require 'thread'
 class LockManager
   
   def initialize
-    @locks = {}
+    @locks, @locksets = {}, {}
+  end
+  
+  def set_add( lock_id, key )
+    @locksets[lock_id.to_s] = [] unless @locksets.has_key?( lock_id.to_s )
+    @locksets[lock_id.to_s].push key if @locksets[lock_id.to_s].index( key ).nil?
+  end
+  
+  def set_del( lock_id, key )
+    @locksets[lock_id.to_s] = [] unless @locksets.has_key?( lock_id.to_s )
+    @locksets[lock_id.to_s].delete( key )
+  end
+  
+  def in_set?( lock_id, key )
+    @locksets[lock_id.to_s] = [] unless @locksets.has_key?( lock_id.to_s )
+    ( ! @locksets[lock_id.to_s].index( key ).nil? )
   end
   
   def create( params )

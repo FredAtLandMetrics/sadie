@@ -144,4 +144,28 @@ describe LockManager do
     t3.join
     ( @max > 1 ).should be_false
   end
+  
+  it "should add keys to the lockset" do
+    lockid = @lockmgr.create( :systype => 'test', :locktype => 'test' )
+    @lockmgr.set_add( lockid, 'testkey' )
+    sethash = @lockmgr.instance_variable_get(:@locksets)
+    sethash[lockid.to_s].index('testkey').nil?.should be_false
+  end
+  
+  it "should delete keys from the lockset" do
+    lockid = @lockmgr.create( :systype => 'test', :locktype => 'test' )
+    @lockmgr.set_add( lockid, 'testkey' )
+    sethash = @lockmgr.instance_variable_get(:@locksets)
+    sethash[lockid.to_s].index('testkey').nil?.should be_false
+    @lockmgr.set_del( lockid, 'testkey' )
+    sethash[lockid.to_s].index('testkey').nil?.should be_true
+  end
+  
+  it "should have a functional in_set? method" do
+    lockid = @lockmgr.create( :systype => 'test', :locktype => 'test' )
+    @lockmgr.set_add( lockid, 'testkey' )
+    @lockmgr.in_set?( lockid, 'testkey' ).should be_true
+    @lockmgr.set_del( lockid, 'testkey' )
+    @lockmgr.in_set?( lockid, 'testkey' ).should be_false
+  end
 end
