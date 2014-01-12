@@ -44,10 +44,11 @@ class RedisTimestampQueue
     if params.is_a? Hash
       if params.has_key? :before
         thresh = params[:before]
-        recs = @redis_server.zrangebyscore(_redis_sorted_set_name, "0", thresh.to_s, :with_scores => true, :limit => [0, 1])
+        recs = @redis_server.zrangebyscore( _redis_sorted_set_name, "0", thresh.to_s, :with_scores => true, :limit => [0, 1] )
         if ( ! recs.nil? ) && ( ! recs.empty? )
           key,ts = recs[0]
           ret = _package_rec( ts, key, params )
+          @redis_server.zremrangebyscore( _redis_sorted_set_name, "0", thresh.to_s )
         end
       end
     end
@@ -59,14 +60,17 @@ class RedisTimestampQueue
     if params.is_a? Hash
       if params.has_key? :before
         thresh = params[:before]
-        recs = @redis_server.zrangebyscore(_redis_sorted_set_name, "0", thresh.to_s, :with_scores => true)
+        recs = @redis_server.zrangebyscore( _redis_sorted_set_name, "0", thresh.to_s, :with_scores => true )
         if ( ! recs.nil? ) && ( ! recs.empty? )
           retarray = []
           recs.each do |recarray|
             key,ts = recarray
             retarray.push _package_rec( ts, key, params )
           end
-          ret = retarray unless retarray.empty?
+          if ! retarray.empty?
+            ret = retarray
+            @redis_server.zremrangebyscore( _redis_sorted_set_name, "0", thresh.to_s )
+          end
         end
       end
     end

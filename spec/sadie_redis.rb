@@ -175,6 +175,20 @@ describe 'RedisBasedSadie' do
       keys[1].should == 'testkey2'
       keys[2].should == 'testkey3'
     end    
+    
+    it "should remove records from the queue" do
+      @tsq.stub(:_current_time).and_return(99,100,101,104)
+      @tsq.insert( 'testkey1' )
+      @tsq.insert( 'testkey2' )
+      @tsq.insert( 'testkey3' )
+      @tsq.insert( 'testkey4' )
+      keys = @tsq.find :all, :before => 102
+      keys.is_a?( Array ).should be_true
+      keys.empty?.should be_false
+      keys = @tsq.find :all, :before => 102
+      keys.nil?.should be_true
+    end
+  
   end
   
 end

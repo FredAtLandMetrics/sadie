@@ -79,7 +79,7 @@ class SadieSession
     
     # init storage manager
     @storagemgr_lock = @lockmgr.create( :systype => :session,
-                                        :locktype => :expiry  )
+                                        :locktype => :storage_mgr  )
     @storage_manager = SadieStorageManager.new
     @lockmgr.critical_section_insist( @storagemgr_lock ) do
       @storage_manager.register_storage_mechanism :memory, SadieStorageMechanismMemory.new
