@@ -10,7 +10,7 @@ class SadieStorageMechanismRedis < SadieStorageMechanism
     @port = params.has_key?( :port ) ? params[:port] : nil
     @host = params.has_key?( :host ) ? params[:host] : 'localhost'
     
-    @redis_server = Redis.new( :host => @host, :port => @port.to_i )
+    @redis_server = Redis.new( :host => @host, :port => @port.to_i ) unless @host.nil? || @port.nil?
     
   end
   
