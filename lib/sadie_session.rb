@@ -48,7 +48,11 @@ class SadieSession
     end
     
     # init lock manager
-    @lockmgr = LockManager.new
+    @lockmgr = (@session_coordination == :redis) ?
+                  LockManager.new( :mode => :redis_coordinated,
+                                   :redis_host => @redis_host,
+                                   :redis_port => @redis_port    ) :
+                  LockManager.new( :mode => :single_instance )
     
     # init expiry and refresh threads
     @expiry_lock = @lockmgr.create( :systype => :session,

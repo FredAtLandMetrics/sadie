@@ -168,4 +168,9 @@ describe LockManager do
     @lockmgr.set_del( lockid, 'testkey' )
     @lockmgr.in_set?( lockid, 'testkey' ).should be_false
   end
+  
+  it "should default to the single instance mode" do
+    @lockmgr.instance_variable_get(:@mode).should == :single_instance
+  end
+  
 end
