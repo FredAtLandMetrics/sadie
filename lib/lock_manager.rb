@@ -6,6 +6,7 @@ class LockManager
   def initialize( params=nil )
     @locks, @locksets, @mode = {}, {}, :single_instance
     @redis_host, @redis_port = nil, nil
+#     Redis::Classy.db = Redis.new(:host => @redis_host, :port => @redis_port)
     
     if ( ! params.nil? ) &&
        params.is_a?( Hash )
@@ -16,7 +17,7 @@ class LockManager
         @mode = :redis_coordinated
         @redis_host = params[:redis_host] if params.has_key?( :redis_host )
         @redis_port = params[:redis_port] if params.has_key?( :redis_port )
-        
+        Redis::Classy.db = Redis.new(:host => @redis_host, :port => @redis_port)
       end
       
     end
@@ -54,7 +55,7 @@ class LockManager
       @locks[lock_id] = Mutex.new unless @locks.has_key?( lock_id )
       ret = lock_id
     elsif @mode == :redis_coordinated
-      @locks[lock_id] = Redis::Mutex.new( lock_id, :block => 3, :expire => 4 )
+      @locks[lock_id] = Redis::Mutex.new( lock_id, :block => 10, :expire => 4 )
       ret = lock_id
     end
     ret
