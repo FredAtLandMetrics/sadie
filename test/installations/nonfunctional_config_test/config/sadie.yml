@@ -1,0 +1,58 @@
+storage_mechanisms: !!omap
+  - memory:
+      type: local_memory
+      keycheck_stage: 1
+      locktype: local
+  - file:
+      type: local_filesystem
+      key_storage_dirpath: /tmp/sadie-test-keystor
+      keycheck_stage: 1
+      locktype: local
+  - nfs:
+      type: networked_filesystem
+      key_storage_dirpath: /tmp/sadie-test-nfs-keystor
+      keycheck_stage: 2
+      locktype: redis
+  - redis:
+      type: redis
+      port: 6379
+      host: localhost
+      keycheck_stage: 2
+      locktype: redis
+  - remote1:
+      type: remote_sadie
+      host: localhost
+      port: 9560
+      keycheck_stage: 3
+      locktype: none
+  - remote2:
+      type: remote_sadie
+      host: localhost
+      port: 9561
+      keycheck_stage: 3
+      locktype: none
+  - remote3:
+      type: remote_sadie
+      host: localhost
+      port: 9562
+      keycheck_stage: 4
+      readonly: true
+      locktype: none
+
+lock_mechanisms:
+  local:
+    type: local
+  redis:
+    type: redis
+    host: localhost
+    port: 6379
+      
+session:
+  default_storage_mechanism: memory
+  session_coordination: redis  # optional, could also be 'none'
+  
+server:
+  port: 9569
+  access:
+    default: reject
+    whitelist_from: 127.0.0.1

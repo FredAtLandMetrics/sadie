@@ -1,4 +1,4 @@
-$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+$:.unshift File.join(File.dirname(__FILE__), '..', '..',  'lib')
 require 'timestamp_queue'
 require 'sadie_session'
 require 'pp'
