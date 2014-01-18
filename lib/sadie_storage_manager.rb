@@ -1,3 +1,5 @@
+require 'storage_manager_lock_manager'
+
 class SadieStorageManager
   
   def initialize
@@ -32,9 +34,21 @@ class SadieStorageManager
     
     raise 'cannot call register_storage_mechanism with unknown mechanism type' unless @@mechanism_type.has_key?( params[:type] )
     
+    lockmgr = _build_lock_manager( params[:locktype].to_sym, params )
+    
     @registered_mechanisms[ params[:name] ] = { :keycheck_stage => params[:keycheck_stage],
-                                                :lock_manager => 'stub',
+                                                :lock_manager => lockmgr,
                                                 :mechanism => @@mechanism_type[params[:type]].new }
+  end
+  
+  def _build_lock_manager( type, params )
+    if type == :local
+      StorageManagerLockManager.new
+    elsif type == :redis
+      StorageManagerLockManager.new( :mode       => :redis_coordinated,
+                                     :redis_host => params[:host],
+                                     :redis_port => params[:port] )
+    end      
   end
   
 #   def where_key?( key )

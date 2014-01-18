@@ -152,6 +152,8 @@ describe SadieStorageManager do
       mech.has_key?( :lock_manager   ).should be_true
       mech[:keycheck_stage].should == 1
       mech[:mechanism].is_a?( SadieStorageMechanismMemory ).should be_true
+      mech[:lock_manager].is_a?( StorageManagerLockManager ).should be_true
+      mech[:lock_manager].instance_variable_get(:@mode).should == :single_instance
     end
    
   end
