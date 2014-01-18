@@ -20,5 +20,10 @@ namespace :spec do
     system "rspec spec/sadie_redis.rb"
   end
 
+  desc "extensively test sadie classes with redis connectivity"
+  task :sadie_redis_extensive do
+    system "SADIE_REDIS_EXTENSIVE=1 rspec spec/sadie_redis.rb"
+  end
+
 end
 

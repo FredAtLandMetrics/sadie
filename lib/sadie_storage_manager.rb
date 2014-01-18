@@ -38,7 +38,13 @@ class SadieStorageManager
     
     @registered_mechanisms[ params[:name] ] = { :keycheck_stage => params[:keycheck_stage],
                                                 :lock_manager => lockmgr,
-                                                :mechanism => @@mechanism_type[params[:type]].new }
+                                                :mechanism => _build_mechanism( params[:type], params ) }
+  end
+  
+  def _build_mechanism( type, params )
+    
+    @@mechanism_type[params[:type]].new( params )
+    
   end
   
   def _build_lock_manager( type, params )
