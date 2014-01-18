@@ -2,17 +2,39 @@ class SadieStorageManager
   
   def initialize
     @registered_mechanisms = {}
+    @@mechanism_type = {}
+    mechanisms_dirpath = File.join( File.dirname( __FILE__ ), 'storage' )
+    
+    raise 'storage mechanism library dirpath does not exist' unless Dir.exists?( mechanisms_dirpath )
+    
+    Dir.entries( mechanisms_dirpath ).each do |filename|
+      load File.join( mechanisms_dirpath, filename ) if filename =~ /[^\.]+\.rb/
+    end    
+  end
+  
+  def self.register_mechanism_type( params=nil )
+    raise 'register_mechanism_type requires Hash parameter' if params.nil? || ! params.is_a?( Hash )
+    raise 'register_mechanism_type requires a :type parameter' unless params.has_key?( :type )
+    raise 'register_mechanism_type requires a :class parameter' unless params.has_key?( :class )
+    SadieStorageManager.class_variable_get(:@@mechanism_type)[params[:type]] = params[:class]
+  end
+  
+  def mechanism_type_is_registered?( type )
+    @registered_mechanisms.has_key?( type )
   end
   
   def register_storage_mechanism( params=nil )
-    raise 'register_storage_mechanism requires Hash parameter' if params.nil? || ! params.is_a?( Hash )
+    raise 'cannot call register_storage_mechanism without parameters' if params.nil? || ! params.is_a?( Hash )
     raise 'register_storage_mechanism requires a :type parameter' unless params.has_key?( :type )
-    raise 'register_storage_mechanism requires a :class parameter' unless params.has_key?( :class )
-    @registered_mechanisms[:type] = [ params[:class] ]
-  end
-  
-  def mechanism_is_registered?( type )
-    @registered_mechanisms.has_key?( type )
+    raise 'register_storage_mechanism requires a :locktype parameter' unless params.has_key?( :locktype )
+    raise 'register_storage_mechanism requires a :name parameter' unless params.has_key?( :name )
+    raise 'register_storage_mechanism requires a :keycheck_stage parameter' unless params.has_key?( :keycheck_stage )
+    
+    raise 'cannot call register_storage_mechanism with unknown mechanism type' unless @@mechanism_type.has_key?( params[:type] )
+    
+    @registered_mechanisms[ params[:name] ] = { :keycheck_stage => params[:keycheck_stage],
+                                                :lock_manager => 'stub',
+                                                :mechanism => @@mechanism_type[params[:type]].new }
   end
   
 #   def where_key?( key )
@@ -48,7 +70,25 @@ class SadieStorageManager
 #     @mechanisms[where_key?( key )].metadata( key ) if has_key?( key )
 #   end
 #   
-#   def set( params )
+  def set( params=nil )
+    raise 'no registered storage mechanisms available' if @registered_mechanisms.empty?
+    raise 'cannot call set without parameters' if params.nil?
+    
+    if ( ! params.has_key?( :key ) ) && ( ! params.has_key?( :keys ) )
+      raise 'either :key or :keys must be defined'
+    end
+    
+    keys = nil
+    if params.has_key?( :key )
+      keys = Array( params[:key] )
+    elsif params.has_key?( :keys )
+      keys = Array( params[:keys] )
+    end
+    
+    if keys.empty? || ( keys[0].is_a?( String ) && keys[0].empty? )
+      raise 'at least one key must be present'
+    end
+    
 #     unless params.nil?
 #       
 #       if params.is_a? Hash
@@ -75,6 +115,6 @@ class SadieStorageManager
 #         end
 #       end
 #     end
-#   end
+  end
   
 end

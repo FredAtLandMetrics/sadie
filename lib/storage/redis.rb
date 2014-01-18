@@ -55,3 +55,7 @@ class SadieStorageMechanismRedis < SadieStorageMechanism
   end
   
 end
+
+SadieStorageManager.register_mechanism_type( :type => :redis_instance,
+                                             :class =>  SadieStorageMechanismRedis )
+

@@ -14,7 +14,7 @@ storage_mechanisms: !!omap
       keycheck_stage: 2
       locktype: redis
   - redis:
-      type: redis
+      type: redis_instance
       port: 6379
       host: localhost
       keycheck_stage: 2

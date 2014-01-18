@@ -81,3 +81,6 @@ private
     Dir.mkdir( dirpath ) unless Dir.exists?( dirpath )
   end
 end
+
+SadieStorageManager.register_mechanism_type( :type => :local_filesystem,
+                                             :class =>  SadieStorageMechanismFile )

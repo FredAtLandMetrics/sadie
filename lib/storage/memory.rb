@@ -43,3 +43,6 @@ class SadieStorageMechanismMemory < SadieStorageMechanism
   end
   
 end
+
+SadieStorageManager.register_mechanism_type( :type => :local_memory,
+                                             :class =>  SadieStorageMechanismMemory )
